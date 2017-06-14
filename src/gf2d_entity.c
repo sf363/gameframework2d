@@ -6,9 +6,10 @@ typedef struct
 {
     Uint32 maxEntities;
     Entity *entityList;
+    Uint64 autoincrement;
 }EntityManager;
 
-static EntityManager entity_manager;
+static EntityManager entity_manager = {0};
 
 void gf2d_entity_system_close()
 {
@@ -49,9 +50,14 @@ void gf2d_entity_system_init(Uint32 maxEntities)
 
 void gf2d_entity_free(Entity *self)
 {
+    int i;
     if (!self)return;
-    gf2d_action_list_free(self->al);
-    gf2d_sprite_free(self->sprite);
+    if (self->free)self->free(self);
+    for (i = 0;i < EntitySoundMax;i++)
+    {
+        gf2d_sound_free(self->sound[i]);
+    }
+    gf2d_actor_free(&self->actor);
     gf2d_particle_emitter_free(self->pe);
     memset(self,0,sizeof(Entity));
 }
@@ -63,9 +69,11 @@ Entity *gf2d_entity_new()
     {
         if (entity_manager.entityList[i].inuse == 0)
         {
+            memset(&entity_manager.entityList[i],0,sizeof(Entity));
+            entity_manager.entityList[i].id = entity_manager.autoincrement++;
             entity_manager.entityList[i].inuse = 1;
             vector2d_set(entity_manager.entityList[i].scale,1,1);
-            entity_manager.entityList[i].color = gf2d_color(1,1,1,1);// no color shift, opaque
+            entity_manager.entityList[i].actor.color = vector4d(1,1,1,1);// no color shift, opaque
             return &entity_manager.entityList[i];
         }
     }
@@ -74,20 +82,20 @@ Entity *gf2d_entity_new()
 
 void gf2d_entity_draw(Entity *self)
 {
-    Vector4D color;
     if (!self)return;
     if (!self->inuse)return;
-    color = gf2d_color_to_vector4(self->color);
+    
     gf2d_particle_emitter_draw(self->pe);
+
     gf2d_sprite_draw(
-        self->sprite,
+        self->actor.sprite,
         self->position,
         &self->scale,
         &self->scaleCenter,
         &self->rotation,
         &self->flip,
-        &color,
-        (Uint32) self->frame);
+        &self->actor.color,
+        (Uint32) self->actor.frame);
     if (self->draw != NULL)
     {
         self->draw(self);
@@ -104,19 +112,36 @@ void gf2d_entity_draw_all()
     }
 }
 
+void gf2d_entity_pre_sync_body(Entity *self)
+{
+    if (!self)return;// nothin to do
+    vector2d_copy(self->body.velocity,self->velocity);
+}
+
+void gf2d_entity_post_sync_body(Entity *self)
+{
+    if (!self)return;// nothin to do
+//    slog("entity %li : %s old position(%f,%f) => new position (%f,%f)",self->id,self->name,self->position,self->body.position);
+    vector2d_copy(self->position,self->body.position);
+}
+
 void gf2d_entity_update(Entity *self)
 {
     if (!self)return;
     if (!self->inuse)return;
 
-    /*do collision testing*/
-    vector2d_add(self->position,self->position,self->velocity);
+    if (self->dead != 0)
+    {
+        gf2d_entity_free(self);
+        return;
+    }
+    /*collision handles position and velocity*/
     vector2d_add(self->velocity,self->velocity,self->acceleration);
 
     gf2d_particle_emitter_update(self->pe);
 
-    gf2d_action_list_get_next_frame(self->al,&self->frame,self->action);
-    
+    gf2d_actor_next_frame(&self->actor);
+
     if (self->update != NULL)
     {
         self->update(self);
@@ -136,6 +161,26 @@ void gf2d_entity_think_all()
     }
 }
 
+void gf2d_entity_pre_sync_all()
+{
+    int i;
+    for (i = 0; i < entity_manager.maxEntities;i++)
+    {
+        if (entity_manager.entityList[i].inuse == 0)continue;
+        gf2d_entity_pre_sync_body(&entity_manager.entityList[i]);
+    }
+}
+
+void gf2d_entity_post_sync_all()
+{
+    int i;
+    for (i = 0; i < entity_manager.maxEntities;i++)
+    {
+        if (entity_manager.entityList[i].inuse == 0)continue;
+        gf2d_entity_post_sync_body(&entity_manager.entityList[i]);
+    }
+}
+
 void gf2d_entity_update_all()
 {
     int i;
@@ -144,6 +189,21 @@ void gf2d_entity_update_all()
         if (entity_manager.entityList[i].inuse == 0)continue;
         gf2d_entity_update(&entity_manager.entityList[i]);
     }
+}
+
+int gf2d_entity_deal_damage(Entity *target, Entity *inflictor, Entity *attacker,int damage,Vector2D kick)
+{
+    Vector2D k;
+    int inflicted;
+    if (!target)return 0;
+    if (!inflictor)return 0;
+    if (!attacker)return 0;
+    if (!target->damage)return 0;// cannot take damage
+    if (!damage)return 0;// no damage to deal
+    inflicted = target->damage(target,damage, inflictor);
+    vector2d_scale(k,kick,(float)inflicted/(float)damage);
+    vector2d_add(target->velocity,k,target->velocity);
+    return inflicted;
 }
 
 /*eol@eof*/

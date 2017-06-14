@@ -87,7 +87,7 @@ ActionList *gf2d_action_list_new()
             return &action_list_manager.actionLists[i];//return address of this array element
         }
     }
-    slog("error: out of sprite addresses");
+    slog("error: out of actionList addresses");
     return NULL;
 }
 
@@ -122,18 +122,75 @@ int gf2d_action_file_get_count(FILE *file)
     return count;
 }
 
-void gf2d_action_file_load_actions(FILE *file,Action *actions)
+void gf2d_action_file_load_actions(FILE *file,ActionList *actionList)
 {
+    Action *actions;
     char buf[512];
     if (!file)return;
     rewind(file);
+    actions = actionList->actions;
     actions--;
     while(fscanf(file, "%s", buf) != EOF)
     {
+        if(strcmp(buf,"sprite:") == 0)
+        {
+            fscanf(file,"%s",(char*)&actionList->sprite);
+            continue;
+        }
+        if(strcmp(buf,"frameWidth:") == 0)
+        {
+            fscanf(file,"%i",&actionList->frameWidth);
+            continue;
+        }
+        if(strcmp(buf,"frameHeight:") == 0)
+        {
+            fscanf(file,"%i",&actionList->frameHeight);
+            continue;
+        }
+        if(strcmp(buf,"framesPerLine:") == 0)
+        {
+            fscanf(file,"%i",&actionList->framesPerLine);
+            continue;
+        }
+        if(strcmp(buf,"scale:") == 0)
+        {
+            fscanf(file,"%lf,%lf",&actionList->scale.x,&actionList->scale.y);
+            continue;
+        }
+        if(strcmp(buf,"color:") == 0)
+        {
+            fscanf(file,"%lf,%lf,%lf,%lf",&actionList->color.x,&actionList->color.y,&actionList->color.z,&actionList->color.w);
+            continue;
+        }
+        if(strcmp(buf,"colorSpecial:") == 0)
+        {
+            fscanf(file,"%lf,%lf,%lf,%lf",&actionList->colorSpecial.x,&actionList->colorSpecial.y,&actionList->colorSpecial.z,&actionList->colorSpecial.w);
+            continue;
+        }
         if(strcmp(buf,"action:") == 0)
         {
             actions++;
             fscanf(file,"%s",(char*)&actions->name);
+            continue;
+        }
+        if (actions < actionList->actions)
+        {
+            slog("file formatting error, expect action: tag before rest of data");
+            continue;
+        }
+        if(strcmp(buf,"type:") == 0)
+        {
+            fscanf(file,"%s",buf);
+            if (strcmp(buf,"loop")==0)
+            {
+                actions->type = AT_LOOP;
+                continue;
+            }
+            if (strcmp(buf,"pass")==0)
+            {
+                actions->type = AT_PASS;
+                continue;
+            }
             continue;
         }
         if(strcmp(buf,"startFrame:") == 0)
@@ -194,7 +251,7 @@ ActionList *gf2d_action_list_load(
     actionList->actions = (Action*)malloc(sizeof(Action)*count);
     memset(actionList->actions,0,sizeof(Action)*count);
     actionList->numActions = count;
-    gf2d_action_file_load_actions(file,actionList->actions);
+    gf2d_action_file_load_actions(file,actionList);
     
     fclose(file);
     return actionList;
@@ -223,6 +280,18 @@ Action *gf2d_action_list_get_action(ActionList *al, char *name)
     return NULL;// not found
 }
 
+float gf2d_action_set(ActionList *al,char *name)
+{
+    Action *action;
+    action = gf2d_action_list_get_action(al, name);
+    if (!action)
+    {
+        slog("no action found by name %s",name);
+        return ART_ERROR;
+    }
+    return action->startFrame;
+}
+
 ActionReturnType gf2d_action_list_get_next_frame(
     ActionList *al,
     float * frame,
@@ -240,13 +309,8 @@ ActionReturnType gf2d_action_list_get_next_frame(
         slog("no action found by name %s",name);
         return ART_ERROR;
     }
-    if ((*frame < action->startFrame)||(*frame > action->endFrame))
-    {
-        *frame = action->startFrame;
-        return ART_START;
-    }
     *frame += action->frameRate;
-    if (*frame > action->endFrame)
+    if (*frame >= action->endFrame)
     {
         switch (action->type)
         {
@@ -262,5 +326,47 @@ ActionReturnType gf2d_action_list_get_next_frame(
     }
     return ART_NORMAL;
 }
+
+void gf2d_actor_free(Actor *actor)
+{
+    if (!actor)return;
+    gf2d_sprite_free(actor->sprite);
+    gf2d_action_list_free(actor->al);
+    memset(actor,0,sizeof(Actor));
+}
+
+void gf2d_actor_load(Actor *actor,char *file)
+{
+    if (!actor)
+    {
+        slog("no actor specified to load into");
+        return;
+    }
+    actor->al = gf2d_action_list_load(file);
+    if (!actor->al)
+    {
+        return;// should have logged the error already
+    }
+    vector4d_copy(actor->color,actor->al->color);
+    actor->sprite = gf2d_sprite_load_all(
+        actor->al->sprite,
+        actor->al->frameWidth,
+        actor->al->frameHeight,
+        actor->al->framesPerLine);
+}
+
+void gf2d_actor_set_action(Actor *actor,char *action)
+{
+    if (!actor)return;
+    actor->frame = gf2d_action_set(actor->al,action);
+    gf2d_line_cpy(actor->action,action);
+}
+
+void gf2d_actor_next_frame(Actor *actor)
+{
+    if (!actor)return;
+    actor->at = gf2d_action_list_get_next_frame(actor->al,&actor->frame,actor->action);
+}
+
 
 /*eol@eof*/

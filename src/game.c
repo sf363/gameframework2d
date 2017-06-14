@@ -15,10 +15,7 @@ int main(int argc, char * argv[])
     float mf = 0;
     ParticleEmitter *pe;
     Sprite *mouse;
-    Sprite *ship;
-    Sprite *bug;
     Shape shape;
-    Vector2D flipHorizontal = {1,0};
     Vector4D mouseColor = {255,100,255,200};
     
     /*program initializtion*/
@@ -39,8 +36,6 @@ int main(int argc, char * argv[])
     /*demo setup*/
     sprite = gf2d_sprite_load_image("images/backgrounds/bg_flat.png");
     mouse = gf2d_sprite_load_all("images/pointer.png",32,32,16);
-    ship = gf2d_sprite_load_all("images/ed210.png",128,128,16);
-    bug = gf2d_sprite_load_all("images/space_bug.png",128,128,16);
     
     shape = gf2d_shape_circle(0,0,8);
 //    shape = gf2d_shape_rect(-8, -8, 16, 16);
@@ -91,25 +86,6 @@ int main(int argc, char * argv[])
             
             // game entities next
             gf2d_particle_emitter_draw(pe);
-            gf2d_sprite_draw(
-                ship,
-                vector2d(64,570),
-                NULL,
-                NULL,
-                NULL,
-                &flipHorizontal,
-                NULL,
-                90+(int)mf);
-            
-            gf2d_sprite_draw(
-                bug,
-                vector2d(1024,570),
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                88+(int)mf);
             
             //UI elements last
             gf2d_sprite_draw(

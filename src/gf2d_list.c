@@ -1,3 +1,4 @@
+#include <string.h>
 #include "gf2d_list.h"
 #include "simple_logger.h"
 

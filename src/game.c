@@ -13,8 +13,8 @@ int main(int argc, char * argv[])
     int mx,my;
     float mf = 0;
     Sprite *mouse;
-    Vector4D mouseColor = {255,100,255,200};
-    
+    Vector4D mouseColor = {0,0,255,200};
+   
     /*program initializtion*/
     init_logger("gf2d.log");
     slog("---==== BEGIN ====---");
@@ -26,11 +26,12 @@ int main(int argc, char * argv[])
         720,
         vector4d(0,0,0,255),
         0);
-    gf2d_graphics_set_frame_delay(16);
+    gf2d_graphics_set_frame_delay(17);
     gf2d_sprite_init(1024);
     SDL_ShowCursor(SDL_DISABLE);
     
     /*demo setup*/
+
     sprite = gf2d_sprite_load_image("images/backgrounds/bg_flat.png");
     mouse = gf2d_sprite_load_all("images/pointer.png",32,32,16);
     /*main game loop*/

@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdlib.h>
 #include "linklist.h"
 #include "simple_logger.h"
 

@@ -3,18 +3,67 @@
 #include "gf2d_sprite.h"
 #include "simple_logger.h"
 
+typedef struct
+{
+    int width;
+}Brick;
+
+void draw_stack(Sprite *brick,Vector2D start,Brick *bricklist,unsigned int count)
+{
+    unsigned int i,j;
+    int brickheight = 32;
+    int brickwidth = 32;
+    Vector2D drawPosition;
+    if (!brick)return;
+    if (!bricklist)return;
+    for (i = 0; i < count; i++)
+    {
+        //vertical draw
+        drawPosition.x = start.x - ((bricklist[i].width * brickwidth)/2);
+        drawPosition.y = start.y - ((i + 1) * brickheight);
+        for (j = 0;j < bricklist[i].width;j++)
+        {
+            //horizontal draw
+            drawPosition.x += brickwidth;
+            gf2d_sprite_draw(
+                brick,
+                drawPosition,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                0);
+        }
+    }
+}
+
+
 int main(int argc, char * argv[])
 {
     /*variable declarations*/
     int done = 0;
     const Uint8 * keys;
-    Sprite *sprite;
+    Sprite *sprite,*brick;
+    static Brick bricklist[] = 
+    {
+        {2},  
+        {7},  
+        {1},  
+        {5},  
+        {14},  
+        {9},  
+        {13},  
+        {24},  
+        {16},  
+        {22}
+    };
     
     int mx,my;
     float mf = 0;
     Sprite *mouse;
-    Vector4D mouseColor = {255,100,255,200};
-    
+    Vector4D mouseColor = {0,0,255,200};
+   
     /*program initializtion*/
     init_logger("gf2d.log");
     slog("---==== BEGIN ====---");
@@ -26,12 +75,14 @@ int main(int argc, char * argv[])
         720,
         vector4d(0,0,0,255),
         0);
-    gf2d_graphics_set_frame_delay(16);
+    gf2d_graphics_set_frame_delay(17);
     gf2d_sprite_init(1024);
     SDL_ShowCursor(SDL_DISABLE);
     
     /*demo setup*/
+
     sprite = gf2d_sprite_load_image("images/backgrounds/bg_flat.png");
+    brick = gf2d_sprite_load_all("images/brick.png",32,32,16);
     mouse = gf2d_sprite_load_all("images/pointer.png",32,32,16);
     /*main game loop*/
     while(!done)
@@ -48,6 +99,8 @@ int main(int argc, char * argv[])
         // all drawing should happen betweem clear_screen and next_frame
             //backgrounds drawn first
             gf2d_sprite_draw_image(sprite,vector2d(0,0));
+            
+            draw_stack(brick,vector2d(600,700),bricklist,10);
             
             //UI elements last
             gf2d_sprite_draw(

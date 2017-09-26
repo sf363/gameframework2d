@@ -32,4 +32,16 @@ int linklist_free_node(Node *node)
 	return 0;
 }
 
+void linklist_free(Node *head)
+{
+	Node *current;
+	Node *next;
+	if (!head)return;
+	for (current = head; next != NULL; current = next)
+	{
+		next = current->next;
+		linklist_free_node(current);
+	}
+}
+
 /*eol@eof*/

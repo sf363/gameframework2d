@@ -9,14 +9,14 @@
 typedef struct
 {
     Uint32 width,height;
-    Vector2D Start, End;
+    Vector2D start, end;
     Sprite *tileset;
-    Uint8 *map;
+    char *map;
 }TileMap;
 
 TileMap *tilemap_load(char *filename);
 void tilemap_free(TileMap *tilemap);
 void tilemap_draw(TileMap *tilemap,Vector2D position);
-void tilemap_draw_path(Vector2D *path,Vector2D position);
+void tilemap_draw_path(Vector2D *path,int length, TileMap *tilemap, Vector2D position);
 
 #endif

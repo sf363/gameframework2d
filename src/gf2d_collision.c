@@ -442,9 +442,11 @@ void gf2d_body_step(Body *body,Space *space,float step)
             goto attempt;
         }
         //body/body collision check
+
+// based on "body" generate a list of bodies of potential conflict based on your algorith of choice
         for (i = 0; i < bodies; i++)
         {
-            other = (Body*)gf2d_list_get_nth(space->bodyList,i);
+            other = (Body*)gf2d_list_get_nth(space->bodyList,i); // use your list instead of the space body list here
             if ((!other)||// error check
                 (other == body))continue;//dont self collide
             if(!(other->layer & body->layer))continue;// only we share a layer

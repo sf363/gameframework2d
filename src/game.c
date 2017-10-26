@@ -18,7 +18,7 @@ int main(int argc, char * argv[])
 	Sprite *mouse = NULL;
 	Vector4D mouseColor = {255,255,100,200};
 	Space *space = NULL;
-	static Body body[10000];// not a pointer!
+	static Body body[100000];// not a pointer!
 	Shape shape[4];// not a pointer!
 	/*program initializtion*/
 	init_logger("gf2d.log");
@@ -47,14 +47,14 @@ int main(int argc, char * argv[])
 		1,
 		0.1);
 
-	shape[0] = gf2d_shape_circle(0,0, 50);
+	shape[0] = gf2d_shape_circle(0,0, 5);
 	shape[1] = gf2d_shape_circle(20,0, 25);
 	shape[2] = gf2d_shape_rect(-32,-32,64,64);
 	shape[3] = gf2d_shape_rect(-16,-16, 32,32);
 
-	gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
+//	gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
 	/* Stress test*/
-	for (i = 0; i < 100;i++)
+	for (i = 0; i < 10000;i++)
 	{
 		gf2d_body_set(
 			&body[i],
@@ -68,7 +68,7 @@ int main(int argc, char * argv[])
 			10,
 			1,
 			1,
-			&shape[i%4],
+			&shape[0],
 			NULL,
 			NULL,
 			NULL);

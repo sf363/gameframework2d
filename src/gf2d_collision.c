@@ -293,7 +293,7 @@ void gf2d_body_adjust_collision_bounds_velocity(Body *a,float slop, Rect bounds,
 {
     Rect r;
     if (!a)return;
-    gf2d_shape_get_bounds(*a->shape);
+    r = gf2d_shape_get_bounds(*a->shape);
     vector2d_add(r,r,a->position);
     vector2d_add(r,r,(*velocity));
     if ((r.x <= bounds.x + slop)&&(velocity->x < 0))velocity->x = 0;

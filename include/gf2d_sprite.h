@@ -41,6 +41,7 @@ void gf2d_sprite_draw_image(Sprite *image,Vector2D position);
  * @param frameWidth the width of an individual sprite frame
  * @param frameHeigh the height of an individual sprite frame
  * @param framesPerLine how many frames go in a row in the sprite sheet
+ * @returns NULL on error or the sprite loaded
  */
 Sprite *gf2d_sprite_load_all(
     char *filename,

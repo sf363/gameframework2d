@@ -54,7 +54,7 @@ int main(int argc, char * argv[])
 
 	gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
 	/* Stress test*/
-	for (i = 0; i < 500;i++)
+	for (i = 0; i < 50;i++)
 	{
 		gf2d_body_set(
 			&body[i],

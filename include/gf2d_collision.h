@@ -18,8 +18,9 @@ typedef struct Collision_S
     Uint8    collided;          /**<true if the there as a collision*/
     Vector2D pointOfContact;    /**<point in space that contact was made*/
     Vector2D normal;            /**<normal vector at the point of contact*/
-    List    *shapeList;             /**<shape information on what what contacted*/
-    List    *bodyList;              /**<body information if a body was collided with*/
+    Shape   *shape;             /**<shape information on what what contacted*/
+    Body    *body;              /**<body information if a body was collided with*/
+    Uint8    bounds;            /**<true if this collision was with the space bounds*/
     float    timeStep;          /**<at what time step contact was made*/
 }Collision;
 

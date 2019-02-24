@@ -163,9 +163,16 @@ void gf2d_space_draw(Space *space,Vector2D offset)
 void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
 {
     DynamicBody *other;
+    Shape *shape;
+    Collision *collision;
+    Vector2D oldPosition;
     int i,count;
     if (!space)return;
+    // save our place in case of collision
+    vector2d_copy(oldPosition,db->position);
     vector2d_add(db->position,db->position,db->velocity);
+    
+    // check against dynamic bodies
     count = gf2d_list_get_count(space->dynamicBodyList);
     for (i = 0; i < count;i++)
     {
@@ -173,10 +180,33 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
         if (!other)continue;
         if (other == db)continue;   // skip checking outself
         // check for layer compatibility
-        if (gf2d_dynamic_body_collision_check(db,other))
-        {
-            slog("HIT");
-        }
+        collision = gf2d_dynamic_body_collision_check(db,other,t);
+        if (collision == NULL)continue;
+        db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
+    }
+
+    // check against static shapes
+    count = gf2d_list_get_count(space->staticShapes);
+    for (i = 0; i < count;i++)
+    {
+        shape = (Shape*)gf2d_list_get_nth(space->staticShapes,i);
+        if (!shape)continue;
+        // check for layer compatibility
+        collision = gf2d_dynamic_body_shape_collision_check(db,shape,t);
+        if (collision == NULL)continue;
+        db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
+    }
+    
+    //check if the dynamic body is leaving the level bounds
+    collision = gf2d_dynamic_body_bounds_collision_check(db,space->bounds,t);
+    if (collision != NULL)
+    {
+        db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
+    }
+    
+    if (db->blocked)
+    {
+        vector2d_copy(db->position,oldPosition);
     }
 }
 
@@ -190,6 +220,7 @@ void gf2d_space_step(Space *space,float t)
     {
         db = (DynamicBody*)gf2d_list_get_nth(space->dynamicBodyList,i);
         if (!db)continue;
+        if (db->blocked)continue;// no need to move something that has already collided
         gf2d_space_dynamic_bodies_step(space,db, t);
     }
 }

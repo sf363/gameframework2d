@@ -2,6 +2,7 @@
 #define __GF2D_DYNAMIC_BODY_H__
 
 #include "gf2d_body.h"
+#include "gf2d_collision.h"
 
 typedef struct
 {
@@ -31,10 +32,33 @@ void gf2d_dynamic_body_update(DynamicBody *db);
 
 /**
  * @brief check if two dynamic bodies are overlapping at the current time step
+ * @note the collision object returned must be freed
  * @param dba the first dynamic body, the one moving
  * @param dbb the other dynamic body, the one not moving
- * @return 0 on no collision or error, 1 if there is a collision
+ * @param timeStep the time segment for the current update round
+ * @return NULL on error or no collision, a pointer to the collision data otherwise
  */
-Uint8 gf2d_dynamic_body_collision_check(DynamicBody *dba,DynamicBody *dbb);
+Collision *gf2d_dynamic_body_collision_check(DynamicBody *dba,DynamicBody *dbb,float timeStep);
+
+/**
+ * @brief check if a dynamic body is clipping an arbitrary shape
+ * @note the collision object returned must be freed
+ * @param dba the first dynamic body, the one moving
+ * @param shape the arbitrary shape to check against
+ * @param timeStep the time segment for the current update round
+ * @return NULL on error or no collision, a pointer to the collision data otherwise
+ */
+Collision *gf2d_dynamic_body_shape_collision_check(DynamicBody *dba,Shape *shape,float timeStep);
+
+/**
+ * @brief check if a dynamic body is clipping the bounds of a space
+ * @note the collision object returned must be freed
+ * @param dba the first dynamic body, the one moving
+ * @param bounds the outer boundary of the physics space
+ * @param timeStep the time segment for the current update round
+ * @return NULL on error or no collision, a pointer to the collision data otherwise
+ */
+Collision *gf2d_dynamic_body_bounds_collision_check(DynamicBody *dba,Rect bounds,float timeStep);
+
 
 #endif

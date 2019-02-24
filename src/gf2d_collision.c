@@ -19,8 +19,6 @@ Collision *gf2d_collision_new()
 void gf2d_collision_free(Collision *collision)
 {
     if (!collision)return;
-    gf2d_list_delete(collision->shapeList);
-    gf2d_list_delete(collision->bodyList);
     free(collision);
 }
 

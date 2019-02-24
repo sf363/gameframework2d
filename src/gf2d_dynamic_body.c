@@ -12,15 +12,81 @@ Shape gf2d_dynamic_body_to_shape(DynamicBody *a)
     return aS;
 }
 
-Uint8 gf2d_dynamic_body_collision_check(DynamicBody *dba,DynamicBody *dbb)
+Collision *gf2d_dynamic_body_bounds_collision_check(DynamicBody *dba,Rect bounds,float timeStep)
 {
-    if ((!dba)||(!dbb))return 0;
+    Collision *collision = NULL;
+    Rect dbBounds;
+    if (!dba)return NULL;
+    if (!dba->body)
+    {
+        slog("cannot do collision check, body missing from DynamicBody");
+        return NULL;
+    }
+    dbBounds = gf2d_shape_get_bounds(gf2d_dynamic_body_to_shape(dba));
+    if ((dbBounds.x > bounds.x)&&(dbBounds.x + dbBounds.w < bounds.x + bounds.w)&&
+        (dbBounds.y > bounds.y)&&(dbBounds.y + dbBounds.h < bounds.y + bounds.h))
+    {
+        // No collision with the level bounds
+        return NULL;
+    }
+    collision = gf2d_collision_new();
+    if (!collision)return NULL;
+    collision->body = NULL;
+    collision->timeStep = timeStep;
+    //TODO: collision->pointOfContact;
+    //TODO: collision->normal;
+    collision->shape = NULL;
+    collision->bounds = 1;
+    dba->blocked = 1;
+    return collision;
+}
+
+Collision *gf2d_dynamic_body_shape_collision_check(DynamicBody *dba,Shape *shape,float timeStep)
+{
+    Collision *collision = NULL;
+    if (!dba)return NULL;
+    if ((!dba->body)||(!shape))
+    {
+        slog("cannot do collision check, body or shape shape missing");
+        return NULL;
+    }
+    if (!gf2d_shape_overlap(gf2d_dynamic_body_to_shape(dba),*shape))
+    {
+        return NULL;
+    }
+    collision = gf2d_collision_new();
+    if (!collision)return NULL;
+    collision->body = NULL;
+    collision->timeStep = timeStep;
+    //TODO: collision->pointOfContact;
+    //TODO: collision->normal;
+    collision->shape = shape;
+    dba->blocked = 1;
+    return collision;
+}
+
+Collision *gf2d_dynamic_body_collision_check(DynamicBody *dba,DynamicBody *dbb,float timeStep)
+{
+    Collision *collision = NULL;
+    if ((!dba)||(!dbb))return NULL;
     if ((!dba->body)||(!dbb->body))
     {
         slog("cannot do collision check, body missing from one or more DynamicBody");
-        return 0;
+        return NULL;
     }
-    return gf2d_shape_overlap(gf2d_dynamic_body_to_shape(dba),gf2d_dynamic_body_to_shape(dbb));
+    if (!gf2d_shape_overlap(gf2d_dynamic_body_to_shape(dba),gf2d_dynamic_body_to_shape(dbb)))
+    {
+        return NULL;
+    }
+    collision = gf2d_collision_new();
+    if (!collision)return NULL;
+    collision->body = dbb->body;
+    collision->timeStep = timeStep;
+    //TODO: collision->pointOfContact;
+    //TODO: collision->normal;
+    collision->shape = dbb->body->shape;
+    dba->blocked = 1;
+    return collision;
 }
 
 DynamicBody *gf2d_dynamic_body_new()
@@ -48,6 +114,8 @@ void gf2d_dynamic_body_clear_collisions(DynamicBody *db)
         if (!collision)continue;
         gf2d_collision_free(collision);
     }
+    gf2d_list_delete(db->collisionList);
+    db->collisionList = NULL;
 }
 
 void gf2d_dynamic_body_free(DynamicBody *db)
@@ -63,6 +131,13 @@ void gf2d_dynamic_body_update(DynamicBody *db)
     if (!db)return;
     if (!db->body)return;
     vector2d_copy(db->body->position,db->position);
+    if (db->blocked)
+    {
+        if (db->body->touch)
+        {
+            db->body->touch(db->body,db->collisionList);
+        }
+    }
 }
 
 void gf2d_dynamic_body_reset(DynamicBody *db,float factor)

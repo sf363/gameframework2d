@@ -5,8 +5,6 @@
 #include "gf2d_list.h"
 #include "gf2d_text.h"
 
-typedef struct Collision_S Collision;
-
 typedef struct Body_S
 {
     TextLine    name;           /**<name for debugging purposes*/
@@ -22,23 +20,16 @@ typedef struct Body_S
     float       elasticity;     /**<how much bounce this body has*/
     Shape      *shape;          /**<which shape data will be used to collide for this body*/
     void       *data;           /**<custom data pointer*/
-    int       (*bodyTouch)(struct Body_S *self, struct Body_S *other, Collision *collision);/**< function to call when two bodies collide*/
-    int       (*worldTouch)(struct Body_S *self, Collision *collision);/**<function to call when a body collides with a static shape*/
+    int       (*touch)(struct Body_S *self, List *collision);/**< function to call when two bodies collide*/
 }Body;
 
-
-typedef struct
-{
-    Uint32      layer;          /**<layer mask to clip against*/
-    Uint32      team;           /**<ignore any team ==*/
-    Body       *ignore;         /**<if not null, the body will be ignored*/
-}ClipFilter;
-
-
-void gf2d_body_adjust_bounds_collision_velocity(Body *a,Vector2D poc, Vector2D normal);
-void gf2d_body_adjust_collision_velocity(Body *a,Body *b,Vector2D poc, Vector2D normal);
-void gf2d_body_adjust_static_bounce_velocity(Body *a,Shape *s,Vector2D poc, Vector2D normal);
-void gf2d_body_adjust_collision_overlap(Body *a,float slop,Rect bounds);
+/**
+ * @brief check if the two bodies provided are overlapping in any way
+ * @param a one body
+ * @param b the other body
+ * @return 0 on error or no collision, 1 otherwise
+ */
+Uint8 gf2d_body_body_collide(Body *a,Body *b);
 
 /**
  * @brief draw a body to the screen.  Shape will be magenta, center point will be a green pixel
@@ -47,11 +38,6 @@ void gf2d_body_adjust_collision_overlap(Body *a,float slop,Rect bounds);
  */
 void gf2d_body_draw(Body *body,Vector2D offset);
 
-/**
- * check if body is within the bounds specified
- */
-Uint8 gf2d_body_check_bounds(Body *body,Rect bounds,Vector2D *poc,Vector2D *normal);
-Uint8 gf2d_body_collide_filter(Body *a,Body *b,Vector2D *poc, Vector2D *normal, ClipFilter filter);
 
 /**
  * @brief initializes a body to zero
@@ -89,9 +75,7 @@ void gf2d_body_set(
     float       elasticity,
     Shape      *shape,
     void       *data,
-    int     (*bodyTouch)(struct Body_S *self, struct Body_S *other, Collision *collision),
-    int     (*worldTouch)(struct Body_S *self, Collision *collision));
-
+    int     (*bodyTouch)(struct Body_S *self, List *collision));
 /**
  * @brief apply a force to a body taking into account momentum
  * @param body the body to move

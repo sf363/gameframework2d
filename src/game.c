@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
         0.1);
 
     shape[0] = gf2d_shape_circle(0,0, 10);
-    shape[1] = gf2d_shape_circle(20,0, 15);
+    shape[1] = gf2d_shape_circle(10,0, 15);
     shape[2] = gf2d_shape_rect(-32,-32,64,64);
     shape[3] = gf2d_shape_rect(-16,-16, 32,32);
 
@@ -70,7 +70,6 @@ int main(int argc, char * argv[])
             1,
             1,
             &shape[i%4],
-            NULL,
             NULL,
             NULL);
         gf2d_space_add_body(space,&body[i]);

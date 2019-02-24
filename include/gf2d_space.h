@@ -7,7 +7,7 @@
 
 typedef struct
 {
-    List       *bodyList;       /**<list of bodies in the space*/
+    List       *dynamicBodyList;       /**<list of bodies in the space*/
     List       *staticShapes;   /**<list of shapes that will collide that do not move*/
     int         precision;      /**<number of backoff attempts before giving up*/
     Rect        bounds;         /**<absolute bounds of the space*/
@@ -82,21 +82,5 @@ void gf2d_space_add_static_shape(Space *space,Shape shape);
  */
 void gf2d_space_update(Space *space);
 
-/**
- * @brief check if a shape intersects with any static shape within the space
- * @param space the space to test
- * @param shape the shape to test with
- * @return the collision information
- */
-Collision gf2d_space_shape_test(Space *space,Shape shape);
-
-/**
- * @brief check if a shape intersects with any body within the space
- * @param space the space to test
- * @param shape the shape to test with
- * @param filter a filter to limit results
- * @return the collision information
- */
-void gf2d_space_body_collision_test_filter(Space *space,Shape shape, Collision *collision,ClipFilter filter);
 
 #endif

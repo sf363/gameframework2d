@@ -71,8 +71,8 @@ int main(int argc, char * argv[])
             &shape[0],
             NULL,
             NULL);
-        gf2d_space_add_body(space,&body[i]);
-    for (i = 0; i < 10;i++)
+        gf2d_space_add_body(space,&body[0]);
+    for (i = 1; i < 10;i++)
     {
         gf2d_body_set(
             &body[i],

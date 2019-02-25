@@ -222,6 +222,7 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
                 if (!collision)continue;
                 slog("normals used to calculate bounce (%f,%f)",collision->normal.x,collision->normal.y);
                 normal = gf2d_dynamic_body_bounce(db,collision->normal);
+                vector2d_add(db->position,db->position,collision->normal);
                 vector2d_add(total,total,normal);
             }
             if (count)
@@ -229,8 +230,10 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
                 vector2d_scale(total,total,1.0/count);
                 slog("new vector calculated (%f,%f)",total.x,total.y);
             }
+            slog("dynamic body position (%f,%f)",db->position.x,db->position.y);
+            slog("body position (%f,%f)",db->body->position.x,db->body->position.y);
             db->velocity = total;
-            gf2d_dynamic_body_clear_collisions(db);
+//            gf2d_dynamic_body_clear_collisions(db);
         }
     }
 }

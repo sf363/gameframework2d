@@ -41,7 +41,6 @@ Collision *gf2d_dynamic_body_bounds_collision_check(DynamicBody *dba,Rect bounds
         return NULL;
     }
     dbBounds = gf2d_shape_get_bounds(gf2d_dynamic_body_to_shape(dba));
-    slog("bounds: %f,%f,%f,%f",dbBounds.x,dbBounds.y,dbBounds.w,dbBounds.h);
     if ((dbBounds.x > bounds.x)&&(dbBounds.x + dbBounds.w < bounds.x + bounds.w)&&
         (dbBounds.y > bounds.y)&&(dbBounds.y + dbBounds.h < bounds.y + bounds.h))
     {
@@ -53,7 +52,6 @@ Collision *gf2d_dynamic_body_bounds_collision_check(DynamicBody *dba,Rect bounds
     collision->body = NULL;
     collision->timeStep = timeStep;
     //TODO: collision->pointOfContact;
-    //TODO: collision->normal;
     if (dbBounds.x <= bounds.x)collision->normal.x = 1;
     if (dbBounds.y <= bounds.y)collision->normal.y = 1;
     if (dbBounds.x + dbBounds.w >= bounds.x + bounds.w)collision->normal.x = -1;
@@ -83,7 +81,7 @@ Collision *gf2d_dynamic_body_shape_collision_check(DynamicBody *dba,Shape *shape
     collision->body = NULL;
     collision->timeStep = timeStep;
     //TODO: collision->pointOfContact;
-    collision->normal = gf2d_shape_get_normal(*shape, dba->position);
+    collision->normal = gf2d_shape_get_normal(*shape, gf2d_rect_get_center_point(gf2d_shape_get_bounds(gf2d_dynamic_body_to_shape(dba))));
     collision->shape = shape;
     dba->blocked = 1;
     return collision;
@@ -111,7 +109,8 @@ Collision *gf2d_dynamic_body_collision_check(DynamicBody *dba,DynamicBody *dbb,f
     collision->body = dbb->body;
     collision->timeStep = timeStep;
     //TODO: collision->pointOfContact;
-    collision->normal = gf2d_shape_get_normal(gf2d_dynamic_body_to_shape(dbb), dba->position);
+    collision->normal = gf2d_shape_get_normal(gf2d_dynamic_body_to_shape(dbb),
+                                              gf2d_rect_get_center_point(gf2d_shape_get_bounds(gf2d_dynamic_body_to_shape(dba))));
     collision->shape = dbb->body->shape;
     if ((dba->body->cliplayer)&&(dba->body->cliplayer & dbb->body->cliplayer))
     {

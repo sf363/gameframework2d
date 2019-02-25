@@ -402,5 +402,11 @@ Rect gf2d_shape_get_bounds(Shape shape);
  */
 Vector2D gf2d_shape_get_normal(Shape s, Vector2D refPoint);
 
+/**
+ * @brief get the center point of a rect
+ * @param r the rectangle to use
+ * @return the center point of the rect
+ */
+Vector2D gf2d_rect_get_center_point(Rect r);
 
 #endif

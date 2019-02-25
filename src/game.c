@@ -47,15 +47,15 @@ int main(int argc, char * argv[])
         1,
         0.1);
 
-    shape[0] = gf2d_shape_circle(0,0, 10);
-    shape[1] = gf2d_shape_circle(10,0, 15);
+    shape[1] = gf2d_shape_circle(0,0, 10);
+    shape[0] = gf2d_shape_circle(10,0, 15);
     shape[2] = gf2d_shape_rect(-32,-32,64,64);
     shape[3] = gf2d_shape_rect(-16,-16, 32,32);
 
     gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
     gf2d_space_add_static_shape(space,gf2d_shape_rect(600,50, 30,500));
     /* Stress test*/
-    for (i = 0; i < 10;i++)
+    for (i = 0; i < 1;i++)
     {
         gf2d_body_set(
             &body[i],
@@ -68,7 +68,7 @@ int main(int argc, char * argv[])
                 256+(gf2d_crandom()*128),
                 256+(gf2d_crandom()*128)
             ),
-            vector2d(2*gf2d_crandom(),2*gf2d_crandom()),
+            vector2d(5*gf2d_crandom(),5*gf2d_crandom()),
             10,
             1,
             1,  //elasticity

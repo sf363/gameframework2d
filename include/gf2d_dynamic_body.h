@@ -69,5 +69,10 @@ Collision *gf2d_dynamic_body_bounds_collision_check(DynamicBody *dba,Rect bounds
  */
 Vector2D gf2d_dynamic_body_bounce(DynamicBody *dba,Vector2D normal);
 
+/**
+ * @brief removes collisions from the dynamic body
+ * @param db the dynamic body to clear
+ */
+void gf2d_dynamic_body_clear_collisions(DynamicBody *db);
 
 #endif

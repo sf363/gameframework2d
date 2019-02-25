@@ -198,6 +198,7 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
             collision = gf2d_dynamic_body_shape_collision_check(db,shape,t);
             if (collision == NULL)continue;
             db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
+            slog("static shape clipped");
         }
         
         //check if the dynamic body is leaving the level bounds
@@ -205,21 +206,21 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
         if (collision != NULL)
         {
             db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
+            slog("world bounds clipped");
         }
     }
     if (db->blocked)
     {
-        slog("blocked");
         vector2d_copy(db->position,oldPosition);
         if (db->body->elasticity > 0)
         {
-            db->blocked = 0;
             count = gf2d_list_get_count(db->collisionList);
             vector2d_clear(total);
             for (i = 0; i < count; i++)
             {
                 collision = (Collision*)gf2d_list_get_nth(db->collisionList,i);
                 if (!collision)continue;
+                slog("normals used to calculate bounce (%f,%f)",collision->normal.x,collision->normal.y);
                 normal = gf2d_dynamic_body_bounce(db,collision->normal);
                 vector2d_add(total,total,normal);
             }
@@ -227,11 +228,8 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
             {
                 vector2d_scale(total,total,1.0/count);
             }
-            if (vector2d_magnitude_compare(total,GF2D_EPSILON) == -1)
-            {
-                vector2d_negate(db->velocity,db->velocity);
-            }
-            else db->velocity = total;
+            db->velocity = total;
+            gf2d_dynamic_body_clear_collisions(db);
         }
     }
 }

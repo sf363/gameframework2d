@@ -2,6 +2,11 @@
 #include "gf2d_draw.h"
 #include "simple_logger.h"
 
+Vector2D gf2d_rect_get_center_point(Rect r)
+{
+    return vector2d(r.x + r.w*0.5,r.y + r.h*0.5);
+}
+
 Vector2D gf2d_rect_get_normal(Rect r, Vector2D refPoint)
 {
     Vector2D out = {0};
@@ -11,10 +16,45 @@ Vector2D gf2d_rect_get_normal(Rect r, Vector2D refPoint)
     if (refPoint.y > r.y + r.h)out.y = 1;
     if ((out.x != 0)&&(out.y != 0))
     {
+        if ((out.x < 0)&&(out.y < 0))
+        {
+            if (fabs(r.x - refPoint.x) > fabs(r.y - refPoint.y))
+            {
+                out.y = 0;
+            }
+            else out.x = 0;
+        }
+        else if ((out.x > 0)&&(out.y < 0))
+        {
+            if (fabs(r.x + r.w - refPoint.x) > fabs(r.y - refPoint.y))
+            {
+                out.y = 0;
+            }
+            else out.x = 0;
+        }
+        else if ((out.x < 0)&&(out.y > 0))
+        {
+            if (fabs(r.x - refPoint.x) > fabs(r.y + r.h - refPoint.y))
+            {
+                out.y = 0;
+            }
+            else out.x = 0;
+        }
+        else if ((out.x > 0)&&(out.y > 0))
+        {
+            if (fabs(r.x + r.w - refPoint.x) > fabs(r.y + r.h - refPoint.y))
+            {
+                out.y = 0;
+            }
+            else out.x = 0;
+        }
+        else
+        {
+            vector2d_normalize(&out);
+        }
         // edge case where it has to be perfect 
         // check angle between the corner and the refPoint, if its not damn near perfect 45, pick the dominant side
     }
-    vector2d_normalize(&out);
     return out;
 }
 

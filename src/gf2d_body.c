@@ -42,6 +42,7 @@ void gf2d_body_draw(Body *body,Vector2D offset)
 void gf2d_body_set(
     Body       *body,
     char       *name,
+    Uint8       worldclip,
     Uint32      cliplayer,
     Uint32      touchlayer,
     Uint32      team,
@@ -58,6 +59,7 @@ void gf2d_body_set(
     body->cliplayer = cliplayer;
     body->touchlayer = touchlayer;
     body->team = team;
+    body->worldclip = worldclip;
     vector2d_copy(body->position,position);
     vector2d_copy(body->velocity,velocity);
     body->mass = mass;

@@ -166,6 +166,7 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
     Shape *shape;
     Collision *collision;
     Vector2D oldPosition;
+    Vector2D normal,total;
     int i,count;
     if (!space)return;
     // save our place in case of collision
@@ -185,28 +186,53 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
         db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
     }
 
-    // check against static shapes
-    count = gf2d_list_get_count(space->staticShapes);
-    for (i = 0; i < count;i++)
+    if (db->body->worldclip)
     {
-        shape = (Shape*)gf2d_list_get_nth(space->staticShapes,i);
-        if (!shape)continue;
-        // check for layer compatibility
-        collision = gf2d_dynamic_body_shape_collision_check(db,shape,t);
-        if (collision == NULL)continue;
-        db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
+        // check against static shapes
+        count = gf2d_list_get_count(space->staticShapes);
+        for (i = 0; i < count;i++)
+        {
+            shape = (Shape*)gf2d_list_get_nth(space->staticShapes,i);
+            if (!shape)continue;
+            // check for layer compatibility
+            collision = gf2d_dynamic_body_shape_collision_check(db,shape,t);
+            if (collision == NULL)continue;
+            db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
+        }
+        
+        //check if the dynamic body is leaving the level bounds
+        collision = gf2d_dynamic_body_bounds_collision_check(db,space->bounds,t);
+        if (collision != NULL)
+        {
+            db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
+        }
     }
-    
-    //check if the dynamic body is leaving the level bounds
-    collision = gf2d_dynamic_body_bounds_collision_check(db,space->bounds,t);
-    if (collision != NULL)
-    {
-        db->collisionList = gf2d_list_append(db->collisionList,(void*)collision);
-    }
-    
     if (db->blocked)
     {
+        slog("blocked");
         vector2d_copy(db->position,oldPosition);
+        if (db->body->elasticity > 0)
+        {
+            db->blocked = 0;
+            count = gf2d_list_get_count(db->collisionList);
+            vector2d_clear(total);
+            for (i = 0; i < count; i++)
+            {
+                collision = (Collision*)gf2d_list_get_nth(db->collisionList,i);
+                if (!collision)continue;
+                normal = gf2d_dynamic_body_bounce(db,collision->normal);
+                vector2d_add(total,total,normal);
+            }
+            if (count)
+            {
+                vector2d_scale(total,total,1.0/count);
+            }
+            if (vector2d_magnitude_compare(total,GF2D_EPSILON) == -1)
+            {
+                vector2d_negate(db->velocity,db->velocity);
+            }
+            else db->velocity = total;
+        }
     }
 }
 
@@ -236,7 +262,7 @@ void gf2d_space_reset_bodies(Space *space)
     }
 }
 
-void gf2d_space_update_bodies(Space *space)
+void gf2d_space_update_bodies(Space *space,float loops)
 {
     DynamicBody *db = NULL;
     int i,count;
@@ -246,21 +272,23 @@ void gf2d_space_update_bodies(Space *space)
     {
         db = (DynamicBody*)gf2d_list_get_nth(space->dynamicBodyList,i);
         if (!db)continue;
-        gf2d_dynamic_body_update(db);
+        gf2d_dynamic_body_update(db,loops);
     }
 }
 
 void gf2d_space_update(Space *space)
 {
     float s;
+    float loops = 0;
     if (!space)return;
     gf2d_space_reset_bodies(space);
     // reset all body tracking
     for (s = 0; s <= 1; s += space->timeStep)
     {
         gf2d_space_step(space,s);
+        loops = loops + 1;
     }
-    gf2d_space_update_bodies(space);
+    gf2d_space_update_bodies(space,loops);
 }
 
 

@@ -53,23 +53,26 @@ int main(int argc, char * argv[])
     shape[3] = gf2d_shape_rect(-16,-16, 32,32);
 
     gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
+    gf2d_space_add_static_shape(space,gf2d_shape_rect(600,50, 30,500));
     /* Stress test*/
-    for (i = 0; i < 50;i++)
+    for (i = 0; i < 10;i++)
     {
         gf2d_body_set(
             &body[i],
             "body",
-            ALL_LAYERS,
+            1,
+            0,
             0,
             0,
             vector2d(
-            600+(gf2d_crandom()*500),
-            360+(gf2d_crandom()*300)),
-            vector2d(gf2d_crandom(),gf2d_crandom()),
+                256+(gf2d_crandom()*128),
+                256+(gf2d_crandom()*128)
+            ),
+            vector2d(2*gf2d_crandom(),2*gf2d_crandom()),
             10,
             1,
-            1,
-            &shape[i%4],
+            1,  //elasticity
+            &shape[i%2],
             NULL,
             NULL);
         gf2d_space_add_body(space,&body[i]);
@@ -105,7 +108,7 @@ int main(int argc, char * argv[])
         gf2d_grahics_next_frame();// render current draw frame and skip to the next frame
 
         if (keys[SDL_SCANCODE_ESCAPE])done = 1; // exit condition
-        slog("Rendering at %f FPS",gf2d_graphics_get_frames_per_second());
+//        slog("Rendering at %f FPS",gf2d_graphics_get_frames_per_second());
     }
 
     gf2d_space_free(space);

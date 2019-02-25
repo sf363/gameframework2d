@@ -27,8 +27,9 @@ void gf2d_dynamic_body_reset(DynamicBody *db,float factor);
 /**
  * @brief after a space update, this writes back to the body the new data and calls update functions
  * @param db the dynamic body that has been updated
+ * @param factor the time set factor to update by
  */
-void gf2d_dynamic_body_update(DynamicBody *db);
+void gf2d_dynamic_body_update(DynamicBody *db,float factor);
 
 /**
  * @brief check if two dynamic bodies are overlapping at the current time step
@@ -59,6 +60,14 @@ Collision *gf2d_dynamic_body_shape_collision_check(DynamicBody *dba,Shape *shape
  * @return NULL on error or no collision, a pointer to the collision data otherwise
  */
 Collision *gf2d_dynamic_body_bounds_collision_check(DynamicBody *dba,Rect bounds,float timeStep);
+
+/**
+ * @brief calculate a bounce vector for the given dynamic body based on the provided normal
+ * @param dba the body to bounce
+ * @param normal the direction of reflection
+ * @return an empty vector on error or a new vector based on the bounce
+ */
+Vector2D gf2d_dynamic_body_bounce(DynamicBody *dba,Vector2D normal);
 
 
 #endif

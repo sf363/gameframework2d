@@ -2,6 +2,76 @@
 #include "gf2d_draw.h"
 #include "simple_logger.h"
 
+Vector2D gf2d_rect_get_normal(Rect r, Vector2D refPoint)
+{
+    Vector2D out = {0};
+    if (refPoint.x < r.x)out.x = -1;
+    if (refPoint.y < r.y)out.y = -1;
+    if (refPoint.x > r.x + r.w)out.x = 1;
+    if (refPoint.y > r.y + r.h)out.y = 1;
+    if ((out.x != 0)&&(out.y != 0))
+    {
+        // edge case where it has to be perfect 
+        // check angle between the corner and the refPoint, if its not damn near perfect 45, pick the dominant side
+    }
+    vector2d_normalize(&out);
+    return out;
+}
+
+Vector2D gf2d_circle_get_normal(Circle c, Vector2D refPoint)
+{
+    Vector2D out = {0};
+    Vector2D center;
+    center = vector2d(c.x,c.y);
+    vector2d_sub(out,refPoint,center);
+    vector2d_normalize(&out);
+    return out;
+}
+
+Vector2D gf2d_edge_get_normal(Edge e, Vector2D refPoint)
+{
+    Vector2D out = {0};
+    Vector2D dir = {0};
+    Vector2D p1,p2;
+    Vector2D n1,n2;
+    p1 = vector2d(e.x1,e.y1);
+    p2 = vector2d(e.x2,e.y2);
+    vector2d_sub(dir,p2,p1);
+    vector2d_normalize(&dir);
+    n1 = vector2d(p1.x+dir.y,p1.y+dir.x);
+    n2 = vector2d(p1.x-dir.y,p1.y-dir.x);
+    if ((vector2d_magnitude_squared(vector2d(refPoint.x - n1.x,refPoint.y - n1.y))) <
+        (vector2d_magnitude_squared(vector2d(refPoint.x - n2.x,refPoint.y - n2.y))))
+    {
+        out.x = dir.y;
+        out.y = dir.x;
+    }
+    else
+    {
+        out.x = -dir.y;
+        out.y = -dir.x;
+    }
+    return out;
+}
+
+Vector2D gf2d_shape_get_normal(Shape s, Vector2D refPoint)
+{
+    Vector2D out = {0};
+    switch(s.type)
+    {
+        case ST_RECT:
+            out = gf2d_rect_get_normal(s.s.r, refPoint);
+            break;
+        case ST_CIRCLE:
+            out = gf2d_circle_get_normal(s.s.c, refPoint);
+            break;
+        case ST_EDGE:
+            out = gf2d_edge_get_normal(s.s.e, refPoint);
+            break;
+    }
+    return out;
+}
+
 Rect gf2d_rect(float x, float y, float w, float h)
 {
     Rect r;
@@ -629,13 +699,13 @@ Rect gf2d_shape_get_bounds(Shape shape)
     switch(shape.type)
     {
         case ST_EDGE:
-            gf2d_edge_get_bounds(shape.s.e);
+            r = gf2d_edge_get_bounds(shape.s.e);
             break;
         case ST_RECT:
             return shape.s.r;
             break;
         case ST_CIRCLE:
-            gf2d_circle_get_bounds(shape.s.c);
+            r = gf2d_circle_get_bounds(shape.s.c);
             break;
     }
     return r;

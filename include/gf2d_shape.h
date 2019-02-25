@@ -394,4 +394,13 @@ void gf2d_rect_slog(Rect r);
  */
 Rect gf2d_shape_get_bounds(Shape shape);
 
+/**
+ * @brief get the normal of the shape relative to a reference for a given shape
+ * @param s the shape to get the normal from
+ * @param refPoint the normal should be pointing towards this point
+ * @return an empty vector if the refPoint is in the shape, a unit vector otherwise
+ */
+Vector2D gf2d_shape_get_normal(Shape s, Vector2D refPoint);
+
+
 #endif

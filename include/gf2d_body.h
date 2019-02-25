@@ -10,6 +10,7 @@ typedef struct Body_S
     TextLine    name;           /**<name for debugging purposes*/
     int         inactive;       /**<internal use only*/
     float       gravity;        /**<the factor this body adheres to gravity*/
+    Uint8       worldclip;      /**<if this body should clip the world bounds and static shapes*/
     Uint32      cliplayer;      /**<only bodies that share one or more layers will collide with each other*/
     Uint32      touchlayer;     /**<only bodies that share one or more layers will have their touch functions called*/
     Uint32      team;           /**<bodies that share a team will NOT interact*/
@@ -49,6 +50,7 @@ void gf2d_body_clear(Body *body);
  * @brief set all parameters for a body
  * @param body the body to set the parameters for
  * @param name the name of the body
+ * @param worldclip if this body should clip the world itself
  * @param cliplayer the layer mask for bodies that clip each other
  * @param touchlayer the layer mask for what bodies to call the touch functions for
  * @param team the team
@@ -65,6 +67,7 @@ void gf2d_body_clear(Body *body);
 void gf2d_body_set(
     Body *body,
     char       *name,
+    Uint8       worldclip,
     Uint32      cliplayer,
     Uint32      touchlayer, 
     Uint32      team,

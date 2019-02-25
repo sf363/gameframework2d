@@ -18,40 +18,25 @@ Vector2D gf2d_rect_get_normal(Rect r, Vector2D refPoint)
     {
         if ((out.x < 0)&&(out.y < 0))
         {
-            if (fabs(r.x - refPoint.x) > fabs(r.y - refPoint.y))
-            {
-                out.y = 0;
-            }
-            else out.x = 0;
+            out.x = refPoint.x - r.x;
+            out.y = refPoint.y - r.y;
         }
         else if ((out.x > 0)&&(out.y < 0))
         {
-            if (fabs(r.x + r.w - refPoint.x) > fabs(r.y - refPoint.y))
-            {
-                out.y = 0;
-            }
-            else out.x = 0;
+            out.x = refPoint.x - r.x + r.w;
+            out.y = refPoint.y - r.y;
         }
         else if ((out.x < 0)&&(out.y > 0))
         {
-            if (fabs(r.x - refPoint.x) > fabs(r.y + r.h - refPoint.y))
-            {
-                out.y = 0;
-            }
-            else out.x = 0;
+            out.x = refPoint.x - r.x;
+            out.y = refPoint.y - r.y + r.h;
         }
         else if ((out.x > 0)&&(out.y > 0))
         {
-            if (fabs(r.x + r.w - refPoint.x) > fabs(r.y + r.h - refPoint.y))
-            {
-                out.y = 0;
-            }
-            else out.x = 0;
+            out.x = refPoint.x - r.x + r.w;
+            out.y = refPoint.y - r.y + r.h;
         }
-        else
-        {
-            vector2d_normalize(&out);
-        }
+        vector2d_normalize(&out);
         // edge case where it has to be perfect 
         // check angle between the corner and the refPoint, if its not damn near perfect 45, pick the dominant side
     }

@@ -14,19 +14,8 @@ Shape gf2d_dynamic_body_to_shape(DynamicBody *a)
 
 Vector2D gf2d_dynamic_body_bounce(DynamicBody *dba,Vector2D normal)
 {
-    double phi;//contact angle
-    double theta1,theta2;// movement angles
-    double v1,v2,part1;
     Vector2D nv = {0};
-    if (!dba)return nv;
-    v1 = vector2d_magnitude(dba->velocity);
-    v2 = 0;
-    theta1 = vector2d_angle(dba->velocity)*GF2D_DEGTORAD;
-    theta2 = 0;
-    phi = vector2d_angle(normal)*GF2D_DEGTORAD;
-    part1 = (v1*cos(theta1-phi)*(dba->body->mass - 100000) + 2 *100000*v2*cos(theta2 - phi))/(dba->body->mass+100000);
-    nv.x = part1*cos(phi)+v1*sin(theta1-phi)*cos(phi + GF2D_HALF_PI);
-    nv.y = part1*sin(phi)+v1*sin(theta1-phi)*sin(phi + GF2D_HALF_PI);
+    vector2d_reflect(&nv, normal,dba->velocity);
     return nv;
 }
 

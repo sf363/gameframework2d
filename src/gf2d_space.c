@@ -227,6 +227,7 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
             if (count)
             {
                 vector2d_scale(total,total,1.0/count);
+                slog("new vector calculated (%f,%f)",total.x,total.y);
             }
             db->velocity = total;
             gf2d_dynamic_body_clear_collisions(db);

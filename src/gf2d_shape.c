@@ -7,53 +7,59 @@ Vector2D gf2d_rect_get_center_point(Rect r)
     return vector2d(r.x + r.w*0.5,r.y + r.h*0.5);
 }
 
-Vector2D gf2d_rect_get_normal(Rect r, Vector2D refPoint)
+Vector2D gf2d_rect_get_normal_for_cirlce(Rect r, Circle c)
 {
     Vector2D out = {0};
-    if (refPoint.x < r.x)out.x = -1;
-    if (refPoint.y < r.y)out.y = -1;
-    if (refPoint.x > r.x + r.w)out.x = 1;
-    if (refPoint.y > r.y + r.h)out.y = 1;
+    if (c.x < r.x)out.x = -1;
+    if (c.y < r.y)out.y = -1;
+    if (c.x > r.x + r.w)out.x = 1;
+    if (c.y > r.y + r.h)out.y = 1;
     if ((out.x != 0)&&(out.y != 0))
     {
         if ((out.x < 0)&&(out.y < 0))
         {
-            out.x = refPoint.x - r.x;
-            out.y = refPoint.y - r.y;
+            out.x = c.x - r.x;
+            out.y = c.y - r.y;
         }
         else if ((out.x > 0)&&(out.y < 0))
         {
-            out.x = refPoint.x - r.x + r.w;
-            out.y = refPoint.y - r.y;
+            out.x = c.x - (r.x + r.w);
+            out.y = c.y - r.y;
         }
         else if ((out.x < 0)&&(out.y > 0))
         {
-            out.x = refPoint.x - r.x;
-            out.y = refPoint.y - r.y + r.h;
+            out.x = c.x - r.x;
+            out.y = c.y - (r.y + r.h);// this breaks without the parenthesis, I HAVE NO IDEA WHY
+
         }
         else if ((out.x > 0)&&(out.y > 0))
         {
-            out.x = refPoint.x - r.x + r.w;
-            out.y = refPoint.y - r.y + r.h;
+            out.x = c.x - (r.x + r.w);
+            out.y = c.y - (r.y + r.h);
         }
         vector2d_normalize(&out);
         // edge case where it has to be perfect 
-        // check angle between the corner and the refPoint, if its not damn near perfect 45, pick the dominant side
+        // check angle between the corner and the c, if its not damn near perfect 45, pick the dominant side
+    }
+    if ((out.x) ||(out.y))return out;
+    if (gf2d_point_in_rect(vector2d(c.x,c.y),r))
+    {
+        out = gf2d_rect_get_center_point(r);
+        vector2d_sub(out,c,out);
+        return out;
     }
     return out;
 }
 
-Vector2D gf2d_circle_get_normal(Circle c, Vector2D refPoint)
+Vector2D gf2d_circle_get_normal_for_cirlce(Circle c, Circle c2)
 {
     Vector2D out = {0};
-    Vector2D center;
-    center = vector2d(c.x,c.y);
-    vector2d_sub(out,refPoint,center);
+    vector2d_sub(out,c,c2);
     vector2d_normalize(&out);
     return out;
 }
 
-Vector2D gf2d_edge_get_normal(Edge e, Vector2D refPoint)
+Vector2D gf2d_edge_get_normal_for_cirlce(Edge e, Circle c)
 {
     Vector2D out = {0};
     Vector2D dir = {0};
@@ -61,37 +67,83 @@ Vector2D gf2d_edge_get_normal(Edge e, Vector2D refPoint)
     Vector2D n1,n2;
     p1 = vector2d(e.x1,e.y1);
     p2 = vector2d(e.x2,e.y2);
-    vector2d_sub(dir,p2,p1);
-    vector2d_normalize(&dir);
-    n1 = vector2d(p1.x+dir.y,p1.y+dir.x);
-    n2 = vector2d(p1.x-dir.y,p1.y-dir.x);
-    if ((vector2d_magnitude_squared(vector2d(refPoint.x - n1.x,refPoint.y - n1.y))) <
-        (vector2d_magnitude_squared(vector2d(refPoint.x - n2.x,refPoint.y - n2.y))))
+    
+    gf2d_edge_slog(e);
+    
+    vector2d_sub(n1,p2,p1);
+    n1.x = p2.y - p1.y;
+    n1.y = p1.x - p2.x;
+    
+    vector2d_normalize(&n1);
+    vector2d_negate(n2,n1);
+    slog("moving circle: (%f,%f,%f)",c.x,c.y,c.r);
+    slog("normal 1 (%f,%f)",n1.x,n1.y);
+    slog("normal 2 (%f,%f)",n2.x,n2.y);
+    
+    vector2d_scale(dir,n1,(c.r + 10));
+    slog("dir 1 (%f,%f)",dir.x,dir.y);
+    if (gf2d_edge_intersect(e,gf2d_edge(c.x, c.y, c.x + dir.x, c.y + dir.y)))
     {
-        out.x = dir.y;
-        out.y = dir.x;
+        slog("first normal selected(%f,%f)",n2.x,n2.y);
+        return n2;
     }
-    else
+    vector2d_scale(dir,n2,(c.r + 10));
+    slog("dir 2 (%f,%f)",dir.x,dir.y);
+    if (gf2d_edge_intersect(e,gf2d_edge(c.x, c.y, c.x + dir.x, c.y + dir.y)))
     {
-        out.x = -dir.y;
-        out.y = -dir.x;
+        slog("second normal selected(%f,%f)",n1.x,n1.y);
+        return n1;
+    }
+    if (gf2d_point_in_cicle(p1,c))
+    {
+        out.x = c.x - p1.x;
+        out.y = c.y - p1.y;
+        vector2d_normalize(&out);
+        slog("end point 1 normal selected(%f,%f)",out.x,out.y);
+        return out;
+    }
+    if (gf2d_point_in_cicle(p2,c))
+    {
+        out.x = c.x - p2.x;
+        out.y = c.y - p2.y;
+        slog("end point 2 normal selected(%f,%f)",out.x,out.y);
+        vector2d_normalize(&out);
+        return out;
     }
     return out;
 }
 
-Vector2D gf2d_shape_get_normal(Shape s, Vector2D refPoint)
+Vector2D gf2d_shape_get_normal_for_cirlce(Shape s, Circle c)
 {
     Vector2D out = {0};
     switch(s.type)
     {
         case ST_RECT:
-            out = gf2d_rect_get_normal(s.s.r, refPoint);
+            out = gf2d_rect_get_normal_for_cirlce(s.s.r, c);
             break;
         case ST_CIRCLE:
-            out = gf2d_circle_get_normal(s.s.c, refPoint);
+            out = gf2d_circle_get_normal_for_cirlce(s.s.c, c);
             break;
         case ST_EDGE:
-            out = gf2d_edge_get_normal(s.s.e, refPoint);
+            out = gf2d_edge_get_normal_for_cirlce(s.s.e, c);
+            break;
+    }
+    return out;
+}
+
+Vector2D gf2d_shape_get_normal_for_shape(Shape s, Shape s2)
+{
+    Vector2D out = {0};
+    switch(s2.type)
+    {
+        case ST_RECT:
+//            out = gf2d_rect_get_normal_for_cirlce(s.s.r, c);
+            break;
+        case ST_CIRCLE:
+            out = gf2d_shape_get_normal_for_cirlce(s, s2.s.c);
+            break;
+        case ST_EDGE:
+ //           out = gf2d_edge_get_normal_for_cirlce(s.s.e, c);
             break;
     }
     return out;

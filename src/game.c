@@ -43,16 +43,17 @@ int main(int argc, char * argv[])
         0.1,
         vector2d(0,0.1),
         1,
-        0.1);
+        20);
 
-    shape[2] = gf2d_shape_circle(0,0, 10);
-    shape[3] = gf2d_shape_circle(10,0, 15);
-    shape[1] = gf2d_shape_rect(-32,-32,64,64);
-    shape[0] = gf2d_shape_rect(-16,-16, 32,32);
+    shape[0] = gf2d_shape_circle(0,0, 10);
+    shape[1] = gf2d_shape_circle(10,0, 15);
+    shape[2] = gf2d_shape_rect(-32,-32,64,64);
+    shape[3] = gf2d_shape_rect(-16,-16, 32,32);
 
     gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
     gf2d_space_add_static_shape(space,gf2d_shape_rect(600,50, 30,500));
     gf2d_space_add_static_shape(space,gf2d_shape_circle(100,300, 15));
+    gf2d_space_add_static_shape(space,gf2d_shape_edge(200,330, 455,360));
     /* Stress test*/
         gf2d_body_set(
             &body[0],
@@ -70,7 +71,7 @@ int main(int argc, char * argv[])
             NULL,
             NULL);
         gf2d_space_add_body(space,&body[0]);
-    for (i = 1; i < 0;i++)
+    for (i = 1; i < 10;i++)
     {
         gf2d_body_set(
             &body[i],
@@ -79,8 +80,8 @@ int main(int argc, char * argv[])
             0,
             0,
             0,
-            vector2d(256 + 128*gf2d_crandom(),256 + 128*gf2d_crandom()),
-            vector2d(3 + gf2d_crandom() * 3,3 + gf2d_crandom() *3),
+            vector2d(256 + 128,256 + 128),
+            vector2d(2.5 * gf2d_crandom(),3 * gf2d_crandom()),
             10,
             1,
             1,  //elasticity
@@ -97,7 +98,27 @@ int main(int argc, char * argv[])
         /*update things here*/
         SDL_GetMouseState(&mx,&my);
         mf+=0.1;
-        if (mf >= 16.0)mf = 0;
+        if (mf >= 16.0)
+        {
+            mf = 0;
+/*            gf2d_body_set(
+            &body[++i],
+            "body",
+            1,
+            0,
+            0,
+            0,
+            vector2d(256 + 128,256 + 128),
+            vector2d(2.5,3),
+            10,
+            1,
+            1,  //elasticity
+            &shape[0],
+            NULL,
+            NULL);
+            gf2d_space_add_body(space,&body[i]);*/
+
+        }
 
 
         gf2d_graphics_clear_screen();// clears drawing buffers

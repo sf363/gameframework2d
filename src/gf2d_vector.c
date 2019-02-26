@@ -125,7 +125,7 @@ void vector4d_set_angle_by_radians(Vector4D *out,float radians)
 
 void vector2d_normalize (Vector2D *V)
 {
-  float M;
+  double M;
   if (!V)return;
   M = vector2d_magnitude (*V);
   if (M == 0.0f)

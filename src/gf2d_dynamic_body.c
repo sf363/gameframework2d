@@ -16,6 +16,7 @@ Vector2D gf2d_dynamic_body_bounce(DynamicBody *dba,Vector2D normal)
 {
     Vector2D nv = {0};
     vector2d_reflect(&nv, normal,dba->velocity);
+    slog("bounce normal (%f,%f)",normal.x,normal.y);
     return nv;
 }
 
@@ -70,7 +71,7 @@ Collision *gf2d_dynamic_body_shape_collision_check(DynamicBody *dba,Shape *shape
     collision->body = NULL;
     collision->timeStep = timeStep;
     //TODO: collision->pointOfContact;
-    collision->normal = gf2d_shape_get_normal(*shape, gf2d_rect_get_center_point(gf2d_shape_get_bounds(gf2d_dynamic_body_to_shape(dba))));
+    collision->normal = gf2d_shape_get_normal_for_shape(*shape, gf2d_dynamic_body_to_shape(dba));
     collision->shape = shape;
     dba->blocked = 1;
     return collision;
@@ -89,6 +90,10 @@ Collision *gf2d_dynamic_body_collision_check(DynamicBody *dba,DynamicBody *dbb,f
     {
         return NULL;
     }
+    if (!dba->body->cliplayer)
+    {
+        return NULL;
+    }
     if (!gf2d_shape_overlap(gf2d_dynamic_body_to_shape(dba),gf2d_dynamic_body_to_shape(dbb)))
     {
         return NULL;
@@ -98,10 +103,9 @@ Collision *gf2d_dynamic_body_collision_check(DynamicBody *dba,DynamicBody *dbb,f
     collision->body = dbb->body;
     collision->timeStep = timeStep;
     //TODO: collision->pointOfContact;
-    collision->normal = gf2d_shape_get_normal(gf2d_dynamic_body_to_shape(dbb),
-                                              gf2d_rect_get_center_point(gf2d_shape_get_bounds(gf2d_dynamic_body_to_shape(dba))));
+    collision->normal = gf2d_shape_get_normal_for_shape(gf2d_dynamic_body_to_shape(dbb),gf2d_dynamic_body_to_shape(dba));
     collision->shape = dbb->body->shape;
-    if ((dba->body->cliplayer)&&(dba->body->cliplayer & dbb->body->cliplayer))
+    if (dba->body->cliplayer & dbb->body->cliplayer)
     {
         dba->blocked = 1;
     }
@@ -156,13 +160,6 @@ void gf2d_dynamic_body_update(DynamicBody *db,float factor)
     if (!db->body)return;
     vector2d_copy(db->body->position,db->position);
     vector2d_scale(db->body->velocity,db->velocity,factor);
-    if (db->blocked)
-    {
-        if (db->body->touch)
-        {
-            db->body->touch(db->body,db->collisionList);
-        }
-    }
 }
 
 void gf2d_dynamic_body_reset(DynamicBody *db,float factor)
@@ -172,7 +169,23 @@ void gf2d_dynamic_body_reset(DynamicBody *db,float factor)
     gf2d_dynamic_body_clear_collisions(db);
     vector2d_copy(db->position,db->body->position);
     vector2d_scale(db->velocity,db->body->velocity,factor);
+    db->speed = vector2d_magnitude(db->velocity);
 }
 
+void gf2d_dynamic_body_resolve_overlap(DynamicBody *db,float backoff)
+{
+    int i,count;
+    Collision *collision;
+    Vector2D total = {0};
+    if (!db)return;
+    count = gf2d_list_get_count(db->collisionList);
+    for (i = 0; i < count; i++)
+    {
+        collision = (Collision*)gf2d_list_get_nth(db->collisionList,i);
+        if (!collision)continue;
+        vector2d_add(total,total,collision->normal);
+    }
+    vector2d_add(db->body->position,db->body->position,total);
+}
 
 /*eol@eof*/

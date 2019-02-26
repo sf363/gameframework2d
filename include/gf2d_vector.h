@@ -186,15 +186,15 @@ void vector3d_cross_product(Vector3D *out, Vector3D v1, Vector3D v2);
  * @param src MglVect3D input
  * @Param factpr the scalar value to scale the vector by.
  */
-#define vector2d_scale(dst,src,factor) (dst.x = src.x *factor,\
-                                         dst.y = src.y *factor)
-#define vector3d_scale(dst,src,factor) (dst.x = src.x *factor,\
-                                         dst.y = src.y *factor,\
-                                         dst.z = src.z *factor)
-#define vector4d_scale(dst,src,factor) (dst.x = src.x *factor,\
-                                         dst.y = src.y *factor,\
-                                         dst.z = src.z *factor,\
-                                         dst.w = src.w *factor)
+#define vector2d_scale(dst,src,factor) (dst.x = src.x *(factor),\
+                                         dst.y = src.y *(factor))
+#define vector3d_scale(dst,src,factor) (dst.x = src.x *(factor),\
+                                         dst.y = src.y *(factor),\
+                                         dst.z = src.z *(factor))
+#define vector4d_scale(dst,src,factor) (dst.x = src.x *(factor),\
+                                         dst.y = src.y *(factor),\
+                                         dst.z = src.z *(factor),\
+                                         dst.w = src.w *(factor))
 /**
  * @brief Macro that sets vector to zero.
  * @param a MglVect[2D|3D|4D] input

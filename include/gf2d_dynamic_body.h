@@ -6,10 +6,12 @@
 
 typedef struct
 {
+    Uint32      id;
     Body       *body;
     Uint8       blocked;        /**<true once this body has been blocked and no longer moves*/
     Vector2D    position;       /**<temp position during update*/
-    Vector2D    velocity;      /**<scaled velocity based on space step*/
+    Vector2D    velocity;       /**<scaled velocity based on space step*/
+    double      speed;          /**<scalar speed of velocity of the body*/
     List       *collisionList;  /**<list of collisions accrued during space update*/
 }DynamicBody;
 
@@ -74,5 +76,13 @@ Vector2D gf2d_dynamic_body_bounce(DynamicBody *dba,Vector2D normal);
  * @param db the dynamic body to clear
  */
 void gf2d_dynamic_body_clear_collisions(DynamicBody *db);
+
+/**
+ * @brief attempt to back a dynamic body away from static shapes that it is overlapping
+ * @note this relies on the collisioList being previously populated
+ * @param db the dynamic body to adjust
+ * @param backoff use this as a factor to move the body off any static shapes the body is clipping  too large will look wrong, too small will not work  0 becomes a no-op
+ */
+void gf2d_dynamic_body_resolve_overlap(DynamicBody *db,float backoff);
 
 #endif

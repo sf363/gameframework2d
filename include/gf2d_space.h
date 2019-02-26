@@ -15,6 +15,7 @@ typedef struct
     Vector2D    gravity;        /**<global gravity pull direction*/
     float       dampening;      /**<rate of movement degrade  ambient frictions*/
     float       slop;           /**<how much to correct for body overlap*/
+    Uint32      idpool;
 }Space;
 
 /**
@@ -81,6 +82,13 @@ void gf2d_space_add_static_shape(Space *space,Shape shape);
  * @param space the space to be updated
  */
 void gf2d_space_update(Space *space);
+
+/**
+ * @brief attempt to fix any bodies that are overlapping static shapes or clipping the space bounds
+ * @param space the space to update
+ * @param tries the number of tries to get everything clear before giving up
+ */
+void gf2d_space_fix_overlaps(Space *space,Uint8 tries);
 
 
 #endif

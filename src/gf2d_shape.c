@@ -54,8 +54,11 @@ Vector2D gf2d_rect_get_normal_for_cirlce(Rect r, Circle c)
 Vector2D gf2d_circle_get_normal_for_cirlce(Circle c, Circle c2)
 {
     Vector2D out = {0};
-    vector2d_sub(out,c,c2);
+    vector2d_sub(out,c2,c);
     vector2d_normalize(&out);
+    slog("static circle: (%f,%f,%f)",c.x,c.y,c.r);
+    slog("moving circle: (%f,%f,%f)",c2.x,c2.y,c2.r);
+    slog("normal 1 (%f,%f)",out.x,out.y);
     return out;
 }
 
@@ -65,6 +68,7 @@ Vector2D gf2d_edge_get_normal_for_cirlce(Edge e, Circle c)
     Vector2D dir = {0};
     Vector2D p1,p2;
     Vector2D n1,n2;
+    double range;
     p1 = vector2d(e.x1,e.y1);
     p2 = vector2d(e.x2,e.y2);
     
@@ -82,6 +86,24 @@ Vector2D gf2d_edge_get_normal_for_cirlce(Edge e, Circle c)
     
     vector2d_scale(dir,n1,(c.r + 10));
     slog("dir 1 (%f,%f)",dir.x,dir.y);
+    if (gf2d_point_in_cicle(p1,c))
+    {
+        out.x = c.x - p1.x;
+        out.y = c.y - p1.y;
+        range = vector2d_magnitude(out);
+        vector2d_normalize(&out);
+        slog("end point 1 normal selected(%f,%f)",out.x,out.y);
+        slog("distance to end point is %f",range);
+        return out;
+    }
+    if (gf2d_point_in_cicle(p2,c))
+    {
+        out.x = c.x - p2.x;
+        out.y = c.y - p2.y;
+        slog("end point 2 normal selected(%f,%f)",out.x,out.y);
+        vector2d_normalize(&out);
+        return out;
+    }
     if (gf2d_edge_intersect(e,gf2d_edge(c.x, c.y, c.x + dir.x, c.y + dir.y)))
     {
         slog("first normal selected(%f,%f)",n2.x,n2.y);
@@ -93,22 +115,6 @@ Vector2D gf2d_edge_get_normal_for_cirlce(Edge e, Circle c)
     {
         slog("second normal selected(%f,%f)",n1.x,n1.y);
         return n1;
-    }
-    if (gf2d_point_in_cicle(p1,c))
-    {
-        out.x = c.x - p1.x;
-        out.y = c.y - p1.y;
-        vector2d_normalize(&out);
-        slog("end point 1 normal selected(%f,%f)",out.x,out.y);
-        return out;
-    }
-    if (gf2d_point_in_cicle(p2,c))
-    {
-        out.x = c.x - p2.x;
-        out.y = c.y - p2.y;
-        slog("end point 2 normal selected(%f,%f)",out.x,out.y);
-        vector2d_normalize(&out);
-        return out;
     }
     return out;
 }

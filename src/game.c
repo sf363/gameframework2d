@@ -53,7 +53,7 @@ int main(int argc, char * argv[])
     gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
     gf2d_space_add_static_shape(space,gf2d_shape_rect(600,50, 30,500));
     gf2d_space_add_static_shape(space,gf2d_shape_circle(100,300, 15));
-    gf2d_space_add_static_shape(space,gf2d_shape_edge(200,330, 455,360));
+    gf2d_space_add_static_shape(space,gf2d_shape_edge(200,200, 455,360));
     /* Stress test*/
         gf2d_body_set(
             &body[0],
@@ -71,7 +71,7 @@ int main(int argc, char * argv[])
             NULL,
             NULL);
         gf2d_space_add_body(space,&body[0]);
-    for (i = 1; i < 10;i++)
+    for (i = 1; i < 1000;i++)
     {
         gf2d_body_set(
             &body[i],

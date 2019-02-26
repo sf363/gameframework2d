@@ -228,6 +228,7 @@ void gf2d_space_dynamic_bodies_step(Space *space,DynamicBody *db, float t)
             {
                 collision = (Collision*)gf2d_list_get_nth(db->collisionList,i);
                 if (!collision)continue;
+                vector2d_add(db->position,db->position,collision->normal);
                 reflected = gf2d_dynamic_body_bounce(db,collision->normal);
                 if (vector2d_magnitude_squared(reflected) != 0)
                 {

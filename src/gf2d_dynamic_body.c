@@ -16,7 +16,6 @@ Vector2D gf2d_dynamic_body_bounce(DynamicBody *dba,Vector2D normal)
 {
     Vector2D nv = {0};
     vector2d_reflect(&nv, normal,dba->velocity);
-    slog("bounce normal (%f,%f)",normal.x,normal.y);
     return nv;
 }
 

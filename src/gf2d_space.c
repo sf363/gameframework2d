@@ -322,7 +322,6 @@ Uint8 gf2d_space_resolve_overlap(Space *space)
         if (gf2d_list_get_count(db->collisionList))
         {
             gf2d_dynamic_body_resolve_overlap(db,space->slop);
-            slog("clipped");
         }
     }
     return clipped;

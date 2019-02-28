@@ -127,21 +127,8 @@ DynamicBody *gf2d_dynamic_body_new()
 
 void gf2d_dynamic_body_clear_collisions(DynamicBody *db)
 {
-    int i, count;
-    Collision *collision;
     if (!db)return;
-    count = gf2d_list_get_count(db->collisionList);
-    for (i = 0; i < count;i++)
-    {
-        collision = (Collision*)gf2d_list_get_nth(db->collisionList,i);
-        if (!collision)continue;
-        gf2d_collision_free(collision);
-    }
-    if (db->collisionList!= NULL)
-    {
-        gf2d_list_delete(db->collisionList);
-        db->collisionList = NULL;
-    }
+    gf2d_collision_list_free(db->collisionList);
     db->collisionList = gf2d_list_new();
 }
 

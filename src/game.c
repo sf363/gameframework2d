@@ -5,13 +5,15 @@
 #include "simple_logger.h"
 #include "gf2d_draw.h"
 #include "gf2d_space.h"
+#include "gf2d_collision.h"
 
 int main(int argc, char * argv[])
 {
     /*variable declarations*/
     int done = 0;
     const Uint8 * keys;
-
+    Collision collision;
+    CollisionFilter filter= {0};
     int mx,my,i;
     float mf = 0;
     Sprite *mouse = NULL;
@@ -57,7 +59,7 @@ int main(int argc, char * argv[])
     gf2d_space_add_static_shape(space,gf2d_shape_edge(100,400, 255,360));
     gf2d_space_add_static_shape(space,gf2d_shape_edge(100,200, 100,400));
     /* Stress test*/
-        gf2d_body_set(
+/*        gf2d_body_set(
             &body[0],
             "body",
             1,
@@ -73,7 +75,7 @@ int main(int argc, char * argv[])
             NULL,
             NULL);
         gf2d_space_add_body(space,&body[0]);
-    for (i = 1; i < 1000;i++)
+    for (i = 1; i < 10;i++)
     {
         gf2d_body_set(
             &body[i],
@@ -91,8 +93,9 @@ int main(int argc, char * argv[])
             NULL,
             NULL);
         gf2d_space_add_body(space,&body[i]);
-    }
+    }*/
     /*main game loop*/
+    filter.worldclip = 1;
     while(!done)
     {
         SDL_PumpEvents();   // update SDL's internal event structures
@@ -129,6 +132,18 @@ int main(int argc, char * argv[])
 //        gf2d_sprite_draw_image(sprite,vector2d(0,0));
         gf2d_space_update(space);
 
+        //test for line intersect check
+        collision = gf2d_collision_trace_space(space, vector2d(mx,my), vector2d(0,0) ,filter);
+        if (collision.collided)
+        {
+            gf2d_draw_line(vector2d(mx,my),collision.pointOfContact, vector4d(255,0,0,255));            
+        }
+        else
+        {
+            gf2d_draw_line(vector2d(mx,my),vector2d(0,0), vector4d(255,255,0,255));
+        }
+        
+        
         gf2d_space_draw(space,vector2d(0,0));
         //UI elements last
         gf2d_sprite_draw(

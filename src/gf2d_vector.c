@@ -81,6 +81,27 @@ void vector4d_set_magnitude(Vector4D * V,float magnitude)
   V->w *= magnitude;
 }
 
+double vector2d_magnitude_between(Vector2D a,Vector2D b)
+{
+    Vector2D c;
+    vector2d_sub(c,a,b);
+    return vector2d_magnitude(c);
+}
+
+double vector3d_magnitude_between(Vector3D a,Vector3D b)
+{
+    Vector3D c;
+    vector3d_sub(c,a,b);
+    return vector3d_magnitude(c);
+}
+
+double vector4d_magnitude_between(Vector4D a,Vector4D b)
+{
+    Vector4D c;
+    vector4d_sub(c,a,b);
+    return vector4d_magnitude(c);
+}
+
 int vector2d_magnitude_compare(Vector2D V,float size)
 {
     float ms = vector2d_magnitude_squared(V);

@@ -302,11 +302,11 @@ void vector4d_set_magnitude(Vector4D * V,float magnitude);
  * @param p1 one point for the distance check
  * @param p2 another point for the distance check
  * @param size the value to check against
- * @return MglTrue if the distance between P1 and P2 is less than size, false otherwise
+ * @return true if the distance between P1 and P2 is less than size, false otherwise
  */
-Bool mgl_distance_between_less_than2d(Vector3D p1,Vector3D p2,float size);
-Bool mgl_distance_between_less_than3d(Vector3D p1,Vector3D p2,float size);
-Bool mgl_distance_between_less_than4d(Vector3D p1,Vector3D p2,float size);
+Bool vector2d_distance_between_less_than(Vector2D p1,Vector2D p2,float size);
+Bool vector3d_distance_between_less_than(Vector3D p1,Vector3D p2,float size);
+Bool vector4d_distance_between_less_than(Vector4D p1,Vector4D p2,float size);
 
 /**
  * @brief given a rotation, get the component vectors

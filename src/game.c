@@ -47,10 +47,10 @@ int main(int argc, char * argv[])
         1,
         20);
 
-    shape[2] = gf2d_shape_circle(0,0, 10);
-    shape[3] = gf2d_shape_circle(10,0, 15);
-    shape[0] = gf2d_shape_rect(-32,-32,64,64);
-    shape[1] = gf2d_shape_rect(-16,-16, 32,32);
+    shape[1] = gf2d_shape_circle(0,0, 10);
+    shape[2] = gf2d_shape_circle(10,0, 15);
+    shape[3] = gf2d_shape_rect(-32,-32,64,64);
+    shape[0] = gf2d_shape_rect(-16,-16, 32,32);
 
     gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
     gf2d_space_add_static_shape(space,gf2d_shape_rect(600,50, 30,550));
@@ -59,7 +59,7 @@ int main(int argc, char * argv[])
     gf2d_space_add_static_shape(space,gf2d_shape_edge(100,400, 255,360));
     gf2d_space_add_static_shape(space,gf2d_shape_edge(100,200, 100,400));
     /* Stress test*/
-/*        gf2d_body_set(
+        gf2d_body_set(
             &body[0],
             "body",
             1,
@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
             0,
             0,
             vector2d(256,256),
-            vector2d(3.1,4.3),
+            vector2d(2.3,4.4),
             10,
             1,
             1,  //elasticity
@@ -75,7 +75,7 @@ int main(int argc, char * argv[])
             NULL,
             NULL);
         gf2d_space_add_body(space,&body[0]);
-    for (i = 1; i < 10;i++)
+    for (i = 1; i < 100;i++)
     {
         gf2d_body_set(
             &body[i],
@@ -89,11 +89,11 @@ int main(int argc, char * argv[])
             10,
             1,
             1,  //elasticity
-            &shape[i%4],
+            &shape[i%2],
             NULL,
             NULL);
         gf2d_space_add_body(space,&body[i]);
-    }*/
+    }
     /*main game loop*/
     filter.worldclip = 1;
     while(!done)
@@ -133,14 +133,14 @@ int main(int argc, char * argv[])
         gf2d_space_update(space);
 
         //test for line intersect check
-        collision = gf2d_collision_trace_space(space, vector2d(mx,my), vector2d(0,0) ,filter);
+        collision = gf2d_collision_trace_space(space, vector2d(mx,my), vector2d(600,360) ,filter);
         if (collision.collided)
         {
             gf2d_draw_line(vector2d(mx,my),collision.pointOfContact, vector4d(255,0,0,255));            
         }
         else
         {
-            gf2d_draw_line(vector2d(mx,my),vector2d(0,0), vector4d(255,255,0,255));
+            gf2d_draw_line(vector2d(mx,my),vector2d(600,360), vector4d(255,255,0,255));
         }
         
         

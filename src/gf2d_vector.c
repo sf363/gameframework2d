@@ -24,6 +24,24 @@ Vector4D vector4d(double x, double y, double z, double w)
   return vec;
 }
 
+Bool vector2d_distance_between_less_than(Vector2D p1,Vector2D p2,float size)
+{
+    if (vector2d_magnitude_between(p1,p2) < size)return 1;
+    return 0;
+}
+
+Bool vector3d_distance_between_less_than(Vector3D p1,Vector3D p2,float size)
+{
+    if (vector3d_magnitude_between(p1,p2) < size)return 1;
+    return 0;
+}
+
+Bool vector4d_distance_between_less_than(Vector4D p1,Vector4D p2,float size)
+{
+    if (vector4d_magnitude_between(p1,p2) < size)return 1;
+    return 0;
+}
+
 float vector2d_magnitude (Vector2D V)
 {
   return sqrt (V.x * V.x + V.y * V.y);

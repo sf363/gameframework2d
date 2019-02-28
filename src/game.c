@@ -53,7 +53,7 @@ int main(int argc, char * argv[])
     shape[1] = gf2d_shape_rect(-16,-16, 32,32);
 
     gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
-    gf2d_space_add_static_shape(space,gf2d_shape_rect(600,50, 30,500));
+    gf2d_space_add_static_shape(space,gf2d_shape_rect(600,50, 30,550));
     gf2d_space_add_static_shape(space,gf2d_shape_circle(300,300, 15));
     gf2d_space_add_static_shape(space,gf2d_shape_edge(100,200, 255,360));
     gf2d_space_add_static_shape(space,gf2d_shape_edge(100,400, 255,360));

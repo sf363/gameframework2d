@@ -7,11 +7,20 @@ typedef struct Entity_S
 {
     Uint8       _inuse;     /**<check if this entity in memory is active or not*/
     Sprite     *sprite;     /**<a pointer to the sprite that is used by this entity*/
+    int         state;
     float       frame;      /**<current frame for the sprite*/
 
     Vector2D    position;   /**<where the entity is in 2D space*/
+    Vector2D    velocity;
     
+    Vector2D    drawOffset; 
+    float       radius;     /**<how wide this entity is*/
+    Vector2D    size;
+    
+    int         madebabies;
+    Uint32      age;
     void (*think)(struct Entity_S *self);   /**<called when an entity draws*/
+    void (*touch)(struct Entity_S *self, struct Entity_S *other);   /**<called when an entity touches another entity*/
     
 }Entity;
 

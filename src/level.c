@@ -3,6 +3,7 @@
 #include "simple_json.h"
 #include "simple_logger.h"
 
+#include "camera.h"
 #include "level.h"
 
 
@@ -135,6 +136,7 @@ void level_free(Level *level)
 
 void level_draw(Level *level)
 {
+    Vector2D offset,drawPosition;
     int i;
     if (!level)
     {
@@ -150,13 +152,22 @@ void level_draw(Level *level)
         slog("not tiles loaded for the level, cannot draw it");
         return;
     }
-
+    offset = camera_get_offset();
     for (i = 0; i < level->tileCount; i++)
     {
         if (level->tileMap[i] == 0)continue;
+        drawPosition.x = ((i % level->levelWidth)*level->tileSet->frame_w);
+        drawPosition.y = ((i / level->levelWidth)*level->tileSet->frame_h);
+        if (!camera_rect_on_screen(gfc_sdl_rect(drawPosition.x,drawPosition.y,level->tileSet->frame_w,level->tileSet->frame_h)))
+        {
+            //tile is off camera, skip
+            continue;
+        }
+        drawPosition.x += offset.x;
+        drawPosition.y += offset.y;
         gf2d_sprite_draw(
             level->tileSet,
-            vector2d((i % level->levelWidth)*level->tileSet->frame_w,(i / level->levelWidth)*level->tileSet->frame_h),
+            drawPosition,
             NULL,
             NULL,
             NULL,

@@ -9,10 +9,19 @@ void camera_set_dimensions(Vector2D size)
     Camera.h = size.y;
 }
 
+Vector2D camera_get_dimensions()
+{
+    Vector2D size;
+    size.x = Camera.w;
+    size.y = Camera.h;
+    return size;
+}
+
+
 void camera_set_position(Vector2D position)
 {
-    Camera.x = position.x;
-    Camera.y = position.y;
+    Camera.x = (int)position.x;
+    Camera.y = (int)position.y;
 }
 
 void camera_move(Vector2D move)
@@ -41,6 +50,10 @@ Bool camera_rect_on_screen(SDL_Rect rect)
     return true;
 }
 
+SDL_Rect camera_get_rect()
+{
+    return Camera;
+}
 
 Vector2D camera_get_position()
 {

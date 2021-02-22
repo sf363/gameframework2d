@@ -33,6 +33,11 @@ void entity_manager_init(Uint32 max_entities);
  */
 void entity_manager_update_entities();
 
+/**
+ * @brief call think function for all entities
+ */
+void entity_manager_think_entities();
+
 
 /**
  * @brief call draw on all entities

@@ -24,10 +24,11 @@ Level *level_load(const char *filename)
 {
     const char *string;
     Level *level;
-    SJson *json,*levelJS,*levelMap,*row;
+    SJson *json,*levelJS,*levelMap,*row,*array;
     int rows,columns;
     int count,tileindex;
     int i,j;
+    int tempInt;
 
     if (!filename)
     {
@@ -53,14 +54,25 @@ Level *level_load(const char *filename)
         return NULL;
     }
     
-    string = sj_get_string_value(sj_object_get_value(levelJS,"bgImage"));
-    if (string)
+    array = sj_object_get_value(levelJS,"bgImage");
+    count = sj_array_get_count(array);
+    level->bgImageCount = count;
+    if (count)
     {
-        level->bgImage = gf2d_sprite_load_image((char *)string);
+        level->bgImage = (Sprite **)gfc_allocate_array(sizeof(Sprite*),count);
+        for (i = 0; i < count;i++)
+        {
+            string = sj_get_string_value(sj_array_get_nth(array,i));
+            if (string)
+            {
+                level->bgImage[i] = gf2d_sprite_load_image((char *)string);
+            }
+        }
     }
     string = sj_get_string_value(sj_object_get_value(levelJS,"tileSet"));
     if (string)
     {
+        slog("loading tile set %s",string);
         sj_get_integer_value(sj_object_get_value(levelJS,"tileWidth"),&level->tileWidth);
         sj_get_integer_value(sj_object_get_value(levelJS,"tileHeight"),&level->tileHeight);
         sj_get_integer_value(sj_object_get_value(levelJS,"tileFPL"),&level->tileFPL);
@@ -70,7 +82,6 @@ Level *level_load(const char *filename)
             level->tileHeight,
             level->tileFPL);
     }
-
     levelMap = sj_object_get_value(levelJS,"tileMap");
     if (!levelMap)
     {
@@ -107,20 +118,44 @@ Level *level_load(const char *filename)
         }
         for (i = 0; i < columns; i++)
         {
-            sj_get_integer_value(sj_array_get_nth(row,i),&level->tileMap[tileindex]);
+            sj_get_integer_value(sj_array_get_nth(row,i),&tempInt);
+            level->tileMap[tileindex] = tempInt;
             printf("%i,",level->tileMap[tileindex++]);
         }
         printf("\n");
     }
-    slog("map width: %i",level->levelWidth);
-    slog("map height: %i",level->levelHeight);
+    level->levelSize.x = level->levelWidth * level->tileWidth;
+    level->levelSize.y = level->levelHeight * level->tileHeight;
+    slog("map width: %f, with %i tiles wide, each %i pixels wide", level->levelSize.x, level->levelWidth,level->tileWidth);
+    slog("map height: %f, with %i tiles high, each %i pixels tall", level->levelSize.y, level->levelHeight, level->tileHeight);
     
     sj_free(json);
     return level;
 }
 
+
+void level_update(Level *level)
+{
+    SDL_Rect camera;
+    if (!level)return;
+    camera = camera_get_rect();
+    //snap camera to the level bounds
+    if ((camera.x + camera.w) > (int)level->levelSize.x)
+    {
+        camera.x = level->levelSize.x - camera.w;
+    }
+    if ((camera.y + camera.h) > (int)level->levelSize.y)
+    {
+        camera.y = level->levelSize.y - camera.h;
+    }
+    if (camera.x < 0)camera.x = 0;
+    if (camera.y < 0)camera.y = 0;
+    camera_set_position(vector2d(camera.x,camera.y));
+}
+
 void level_free(Level *level)
 {
+    int i;
     if (!level)return;// nothing to do
     
     if (level->tileMap != NULL)
@@ -128,7 +163,14 @@ void level_free(Level *level)
         free(level->tileSet);
         level->tileMap = NULL;
     }
-    gf2d_sprite_free(level->bgImage);
+    if (level->bgImageCount)
+    {
+        for (i = 0; i < level->bgImageCount;i++)
+        {
+            gf2d_sprite_free(level->bgImage[i]);
+        }
+        free(level->bgImage);
+    }
     gf2d_sprite_free(level->tileSet);
     
     free(level);
@@ -144,7 +186,14 @@ void level_draw(Level *level)
         return;
     }
     // draw the background first
-    gf2d_sprite_draw_image(level->bgImage,vector2d(0,0));
+    if (level->bgImageCount)
+    {
+        for (i = 0; i < level->bgImageCount;i++)
+        {
+            gf2d_sprite_draw_image(level->bgImage[i],vector2d(0,0));        
+        }
+            
+    }
     //then draw the tiles
     
     if (!level->tileMap)

@@ -11,6 +11,11 @@
  */
 void camera_set_dimensions(Vector2D size);
 
+/**
+ * @brief get the camera's current dimenstions (extent)
+ * @return a vector containing the width and height of the camera
+ */
+Vector2D camera_get_dimensions();
 
 /**
  * @brief check if a point is on screen
@@ -41,6 +46,12 @@ void camera_move(Vector2D move);
  */
 Vector2D camera_get_position();
 
+/**
+ * @brief return the rectangle that describes the camera;
+ * @return the rectangle
+ * @note hehe
+ */
+SDL_Rect camera_get_rect();
 
 /**
  * @brief return the offset for things to be drawn relative to the camera

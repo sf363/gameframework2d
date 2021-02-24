@@ -178,7 +178,8 @@ void level_free(Level *level)
 
 void level_draw(Level *level)
 {
-    Vector2D offset,drawPosition;
+    SDL_Rect camera;
+    Vector2D offset,drawPosition,parallax;
     int i;
     if (!level)
     {
@@ -186,11 +187,16 @@ void level_draw(Level *level)
         return;
     }
     // draw the background first
+    offset = camera_get_offset();
     if (level->bgImageCount)
     {
+        camera = camera_get_rect();
         for (i = 0; i < level->bgImageCount;i++)
         {
-            gf2d_sprite_draw_image(level->bgImage[i],vector2d(0,0));        
+            parallax.x = (float)(level->bgImage[i]->frame_w - camera.w)/ (level->levelSize.x - camera.w);
+            parallax.y = (float)(level->bgImage[i]->frame_h - camera.h)/ (level->levelSize.y - camera.h);
+            
+            gf2d_sprite_draw_image(level->bgImage[i],vector2d(offset.x * parallax.x,offset.y * parallax.y));        
         }
             
     }
@@ -201,7 +207,6 @@ void level_draw(Level *level)
         slog("not tiles loaded for the level, cannot draw it");
         return;
     }
-    offset = camera_get_offset();
     for (i = 0; i < level->tileCount; i++)
     {
         if (level->tileMap[i] == 0)continue;

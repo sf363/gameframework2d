@@ -1,4 +1,6 @@
+#include "shape.h"
 #include "camera.h"
+
 
 
 static SDL_Rect Camera = {0};
@@ -32,22 +34,12 @@ void camera_move(Vector2D move)
 
 Bool camera_point_on_screen(Vector2D point)
 {
-    if ((point.x < Camera.x)||(point.x > Camera.x + Camera.w) ||
-        (point.y < Camera.y)||(point.y > Camera.y + Camera.h))
-    {
-        return false;
-    }
-    return true;
+    return shape_point_in_rect(point, shape_rect_from_sdl_rect(Camera));
 }
 
 Bool camera_rect_on_screen(SDL_Rect rect)
 {
-    if (((rect.x + rect.w) < Camera.x) || (rect.x > (Camera.x + Camera.w)) ||
-        ((rect.y + rect.h) < Camera.y) || (rect.y > (Camera.y + Camera.h)))
-    {
-        return false;
-    }
-    return true;
+    return shape_rect_collision(shape_rect_from_sdl_rect(rect), shape_rect_from_sdl_rect(Camera));
 }
 
 SDL_Rect camera_get_rect()

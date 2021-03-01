@@ -7,6 +7,7 @@
 #include "gf2d_graphics.h"
 #include "gf2d_sprite.h"
 
+#include "font.h"
 #include "camera.h"
 #include "entity.h"
 #include "player.h"
@@ -19,6 +20,8 @@ int main(int argc, char * argv[])
     int done = 0;
     const Uint8 * keys;
     Level *level;
+    Font *font;
+    TextLine fps_text;
     
     int mx,my;
     float mf = 0;
@@ -40,6 +43,8 @@ int main(int argc, char * argv[])
     camera_set_dimensions(vector2d(1200,720));
     camera_set_position(vector2d(0,0));
     gf2d_sprite_init(1024);
+    font_init(10);
+    
     entity_manager_init(100);
     
     
@@ -49,6 +54,7 @@ int main(int argc, char * argv[])
     mouse = gf2d_sprite_load_all("images/pointer.png",32,32,16);
     level = level_load("levels/exampleLevel.json");
     player_spawn(vector2d(100,100));
+    font = font_load("fonts/colony_wars.ttf",16);
     /*main game loop*/
     while(!done)
     {
@@ -82,10 +88,12 @@ int main(int argc, char * argv[])
                 NULL,
                 &mouseColor,
                 (int)mf);
+        gfc_line_sprintf(fps_text,"Rendering at %f FPS",gf2d_graphics_get_frames_per_second());
+        font_render(font,fps_text,vector2d(32,32),gfc_color8(255,0,0,255));
+
         gf2d_grahics_next_frame();// render current draw frame and skip to the next frame
 
         if (keys[SDL_SCANCODE_ESCAPE])done = 1; // exit condition
-//        slog("Rendering at %f FPS",gf2d_graphics_get_frames_per_second());
     }
     slog("---==== END ====---");
     return 0;

@@ -1,3 +1,7 @@
+# RPG Midterm Game
+How to play:
+ Move with mouse and W key. Move the player towards the monsters on the map and they will move to a room where they will have a turn base battle between the player and monster. Player has 3 moves(UP, Left, Right key). UP key being the weakest move and the Right key being the most strong move. Once the monster dies, it disapears and also the player levels up. To gain health, move the player towards the NPC and press up. This puts the player health back to 100. Player also had teammates that move with them. 
+
 # gameframework2d (GF2D)
 a collection of utlitity functions designed to facilitate creating 2D games with SDL2
 This project is specifically intended to function as an educational tool for my students taking 2D Game Programming.

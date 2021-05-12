@@ -1,58 +1,200 @@
-#include "collision.h"
+#include <stdlib.h>
 #include "simple_logger.h"
+
+#include "gf2d_dynamic_body.h"
 #include "gf2d_draw.h"
 
-void gf2d_body_clear(Body *body)
+#include "collision.h"
+
+Collision *gf2d_collision_new()
 {
-	if (!body)return;
-	memset(body, 0, sizeof(Body));
+	Collision *collision = NULL;
+	collision = (Collision *)malloc(sizeof(Collision));
+	if (!collision)
+	{
+		slog("failed to allocate data for a collision object");
+		return NULL;
+	}
+	memset(collision, 0, sizeof(Collision));
+	return collision;
 }
 
-void gf2d_body_set(
-	Body       *body,
-	char       *name,
-	Uint32      layer,
-	Uint32      team,
-	Vector2D    position,
-	Vector2D    velocity,
-	float       mass,
-	float       gravity,
-	float       elasticity,
-	Shape      *shape,
-	void       *data,
-	int(*bodyTouch)(struct Body_S *self, struct Body_S *other, Collision *collision),
-	int(*worldTouch)(struct Body_S *self, Collision *collision))
+void gf2d_collision_free(Collision *collision)
 {
-	if (!body)return;
-	body->layer = layer;
-	body->team = team;
-	vector2d_copy(body->position, position);
-	vector2d_copy(body->velocity, velocity);
-	body->mass = mass;
-	body->gravity = gravity;
-	body->elasticity = elasticity;
-	body->shape = shape;
-	body->data = data;
-	body->bodyTouch = bodyTouch;
-	body->worldTouch = worldTouch;
-	//gf2d_word_cpy(body->name, name);
+	if (!collision)return;
+	free(collision);
 }
 
-void gf2d_free_shapes(void *data,void *context)
+void gf2d_collision_list_clear(List *list)
 {
-    Shape *shape;
-    if (!data)return;
-    shape = (Shape*)data;
-    free(shape);
+	int i, count;
+	Collision *collision;
+	if (!list)return;
+	count = gfc_list_get_count(list);
+	for (i = 0; i < count; i++)
+	{
+		collision = (Collision*)gfc_list_get_nth(list, i);
+		if (!collision)continue;
+		gf2d_collision_free(collision);
+	}
+	for (i = 0; i < count; i++)
+	{
+		gfc_list_delete_last(list);
+	}
 }
 
-void gf2d_space_free(Space *space)
+void gf2d_collision_list_free(List *list)
 {
-    if (!space)return;
-    gf2d_list_delete(space->bodyList);// bodies are not owned by the space and so will not be deleted by the space
-    
-    //static shapes ARE owned by the space, so are deleted when the space goes away
-    gf2d_list_foreach(space->staticShapes,gf2d_free_shapes,NULL);
-    gf2d_list_delete(space->staticShapes);
-    free(space);
+	int i, count;
+	Collision *collision;
+	if (!list)return;
+	count = gfc_list_get_count(list);
+	for (i = 0; i < count; i++)
+	{
+		collision = (Collision*)gfc_list_get_nth(list, i);
+		if (!collision)continue;
+		gf2d_collision_free(collision);
+	}
+	gfc_list_delete(list);
+}
+
+Collision *gf2d_collision_space_static_shape_clip(Shape a, Shape *s)
+{
+	Collision *collision;
+	Vector2D poc, normal;
+	if (!gf2d_shape_overlap_poc(a, *s, &poc, &normal))
+	{
+		return NULL;
+	}
+	collision = gf2d_collision_new();
+	collision->collided = 1;
+	collision->blocked = 1;
+	vector2d_copy(collision->pointOfContact, poc);
+	vector2d_copy(collision->normal, normal);
+	collision->shape = s;
+	collision->body = NULL;
+	collision->bounds = 0;
+	collision->timeStep = 0;
+	return collision;
+}
+
+Collision *gf2d_collision_space_dynamic_body_clip(Shape a, DynamicBody *d)
+{
+	Shape s;
+	Collision *collision;
+	Vector2D poc, normal;
+	if (!d)return NULL;
+	s = gf2d_dynamic_body_to_shape(d);
+	if (!gf2d_shape_overlap_poc(a, s, &poc, &normal))
+	{
+		return NULL;
+	}
+	collision = gf2d_collision_new();
+	collision->collided = 1;
+	collision->blocked = 1;
+	vector2d_copy(collision->pointOfContact, poc);
+	vector2d_copy(collision->normal, normal);
+	collision->shape = d->body->shape;
+	collision->body = d->body;
+	collision->bounds = 0;
+	collision->timeStep = 0;
+	return collision;
+}
+
+
+List *gf2d_collision_check_space_shape(Space *space, Shape shape, CollisionFilter filter)
+{
+	int i, count;
+	Shape *staticShape;
+	DynamicBody *db;
+	Collision *collision;
+	List *collisionList = NULL;
+	collisionList = gfc_list_new();
+	if (filter.worldclip)
+	{
+		count = gfc_list_get_count(space->staticShapes);
+		for (i = 0; i < count; i++)
+		{
+			staticShape = (Shape*)gfc_list_get_nth(space->staticShapes, i);
+			if (!staticShape)continue;
+			// check for layer compatibility
+			collision = gf2d_collision_space_static_shape_clip(shape, staticShape);
+			if (collision == NULL)continue;
+			collisionList = gfc_list_append(collisionList, (void*)collision);
+		}
+		//check if the shape clips the level bounds
+		/*        collision = gf2d_dynamic_body_bounds_collision_check(db,space->bounds,t);
+		if (collision != NULL)
+		{
+		db->collisionList = gfc_list_append(db->collisionList,(void*)collision);
+		}*/
+	}
+	if (filter.cliplayer)
+	{
+		count = gfc_list_get_count(space->dynamicBodyList);
+		for (i = 0; i < count; i++)
+		{
+			db = (DynamicBody*)gfc_list_get_nth(space->dynamicBodyList, i);
+			if (!db)continue;
+			if (db->body == filter.ignore)continue;
+			if (!(filter.cliplayer & db->body->cliplayer))continue;
+			// check for layer compatibility
+			collision = gf2d_collision_space_dynamic_body_clip(shape, db);
+			if (collision == NULL)continue;
+			collisionList = gfc_list_append(collisionList, (void*)collision);
+		}
+
+	}
+
+	return collisionList;
+}
+
+Collision gf2d_collision_trace_space(Space *space, Vector2D start, Vector2D end, CollisionFilter filter)
+{
+	Collision out = { 0 };
+	Collision *collision = NULL;
+	Collision *best = NULL;
+	double     bestDistance = -1;
+	double     distance;
+	double     length;
+	int count, i;
+	List *collisionList;
+	collisionList = gf2d_collision_check_space_shape(space, gf2d_shape_from_edge(gf2d_edge_from_vectors(start, end)), filter);
+	if (!collisionList)
+	{
+		return out;
+	}
+	count = gfc_list_get_count(collisionList);
+	for (i = 0; i < count; i++)
+	{
+		collision = (Collision*)gfc_list_get_nth(collisionList, i);
+		if (!collision)continue;
+		if (!best)
+		{
+			best = collision;
+			bestDistance = vector2d_magnitude_between(start, collision->pointOfContact);
+			continue;
+		}
+		distance = vector2d_magnitude_between(start, collision->pointOfContact);
+		if (distance < bestDistance)
+		{
+			best = collision;
+			bestDistance = distance;
+		}
+	}
+	if (best != NULL)
+	{
+		length = vector2d_magnitude_between(start, end);
+		if (!length)
+		{
+			best->timeStep = 0;
+		}
+		else
+		{
+			best->timeStep = bestDistance / length;
+		}
+		memcpy(&out, best, sizeof(Collision));
+	}
+	gf2d_collision_list_free(collisionList);
+	return out;
 }

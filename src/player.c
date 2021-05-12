@@ -2,8 +2,9 @@
 
 #include "player.h"
 #include "camera.h"
+#include "monster.h"
 
-
+int player_health;
 void player_update(Entity *self);
 void player_think(Entity *self);
 void team_think(Entity *self);
@@ -11,12 +12,14 @@ void team_update(Entity *self);
 void mage_think(Entity *self);
 void tank_update(Entity *self);
 void ranger_update(Entity *self);
-int player_health(Entity *self);
+int player_HP(Entity *self);
 int  player_damage(Entity *self, int amount, Entity *source);
 void player_die(Entity *self);
 void levelup(Entity *self);
 static Entity *_player = NULL;
 int p_health;
+
+//Entity *boss;
 Entity *player_spawn(Vector2D position)
 {
 	Entity *ent;
@@ -26,8 +29,8 @@ Entity *player_spawn(Vector2D position)
 		slog("failed to create entity for the player");
 		return NULL;
 	}
-	ent->sprite = gf2d_sprite_load_all("images/ed210_top.png", 128, 128, 16);
-	ent->health = 100;
+	ent->sprite = gf2d_sprite_load_all("images/character.png", 24, 48, 8);
+	ent->health = 400;
 	ent->attack = 12;
 	ent->damage = player_damage;
 	vector2d_copy(ent->position, position);
@@ -44,8 +47,10 @@ Entity *player_spawn(Vector2D position)
 	ent->turn = 1;
 	ent->complete = 0;
 	ent->lvl = 1;
-	ent->XP=0;
+	ent->XP = 0;
 	ent->name = 1;
+	ent->keys = 0;
+	player_health = ent->health;
 	return ent;
 }
 void player_update(Entity *self)
@@ -77,17 +82,79 @@ void team_think(Entity *self)
 	camera = camera_get_position();
 	mx += camera.x;
 	my += camera.y;
-	aimdir.x = mx - (self->position.x + 64);
+	aimdir.x = mx - (self->position.x + 40);
 	aimdir.y = my - (self->position.y + 64);
 	angle = vector_angle(aimdir.x, aimdir.y);
-	self->rotation.z = angle + 90;
+	//self->rotation.z = angle + 90;
 
 	// turn aimdir into a unit vector
 	vector2d_normalize(&aimdir);
 	// check for motion
 	if (keys[SDL_SCANCODE_W])
 	{
-		vector2d_scale(thrust, aimdir, 5);
+		vector2d_scale(thrust, aimdir, 4);
+		vector2d_add(self->velocity, self->velocity, thrust);
+	}
+	vector2d_scale(self->velocity, self->velocity, 0.75);
+	if (vector2d_magnitude_squared(self->velocity) < 2)
+	{
+		vector2d_clear(self->velocity);
+	}
+}
+void team2_think(Entity *self)
+{
+	const Uint8 *keys;
+	Vector2D aimdir, camera, thrust;
+	float angle;
+	int mx, my;
+	if (!self)return;
+	keys = SDL_GetKeyboardState(NULL);
+	SDL_GetMouseState(&mx, &my);
+	camera = camera_get_position();
+	mx += camera.x;
+	my += camera.y;
+	aimdir.x = mx - (self->position.x + 20);
+	aimdir.y = my - (self->position.y + 64);
+	angle = vector_angle(aimdir.x, aimdir.y);
+	//self->rotation.z = angle + 90;
+
+	// turn aimdir into a unit vector
+	vector2d_normalize(&aimdir);
+	// check for motion
+	if (keys[SDL_SCANCODE_W])
+	{
+		vector2d_scale(thrust, aimdir, 4);
+		vector2d_add(self->velocity, self->velocity, thrust);
+	}
+	vector2d_scale(self->velocity, self->velocity, 0.75);
+	if (vector2d_magnitude_squared(self->velocity) < 2)
+	{
+		vector2d_clear(self->velocity);
+	}
+}
+void team3_think(Entity *self)
+{
+	const Uint8 *keys;
+	Vector2D aimdir, camera, thrust;
+	float angle;
+	int mx, my;
+	if (!self)return;
+	keys = SDL_GetKeyboardState(NULL);
+	SDL_GetMouseState(&mx, &my);
+	camera = camera_get_position();
+	mx += camera.x;
+	my += camera.y;
+	aimdir.x = mx - (self->position.x + 5);
+	aimdir.y = my - (self->position.y + 64);
+	angle = vector_angle(aimdir.x, aimdir.y);
+	//self->rotation.z = angle + 90;
+
+	// turn aimdir into a unit vector
+	vector2d_normalize(&aimdir);
+	// check for motion
+	if (keys[SDL_SCANCODE_W])
+	{
+		vector2d_scale(thrust, aimdir, 4);
 		vector2d_add(self->velocity, self->velocity, thrust);
 	}
 	vector2d_scale(self->velocity, self->velocity, 0.75);
@@ -116,15 +183,20 @@ void player_think(Entity *self)
 	aimdir.x = mx - (self->position.x + 64);
 	aimdir.y = my - (self->position.y + 64);
 	angle = vector_angle(aimdir.x, aimdir.y);
-	self->rotation.z = angle + 90;
-	
+	//self->rotation.z = angle + 90;
+
 	// turn aimdir into a unit vector
 	vector2d_normalize(&aimdir);
 	// check for motion
 	if (keys[SDL_SCANCODE_W])
 	{
-		vector2d_scale(thrust, aimdir, 5);
+		vector2d_scale(thrust, aimdir, 3);
 		vector2d_add(self->velocity, self->velocity, thrust);
+	}
+	if (self->keys >= 5)
+	{
+	//	boss = boss_spawn(vector2d(3800, 500));
+		slog("You've collected enough keys for the final dungeon");
 	}
 	if (self->start == 1)
 	{
@@ -186,6 +258,25 @@ void player_think(Entity *self)
 					}
 				}
 			}
+			if (self->target->name == 4)// interaction with keys
+			{
+				if (self->turn == 1)
+				{
+
+					if (keys[SDL_SCANCODE_UP])//collect
+					{
+						p_health = self->health;
+						self->target->health -= self->attack;
+						//	self->keys++;
+						self->turn = 0;
+						self->complete = 1;
+						self->target->turn = 1;
+						self->target->complete = 0;
+						slog("you collected a key");
+						//slog("youre health is " + p_health);
+					}
+				}
+			}
 			if (self->XP == 100)
 			{
 				self->lvl++;
@@ -199,6 +290,11 @@ void player_think(Entity *self)
 				self->complete = 0;
 				self->target->turn = 0;
 				self->target->complete = 1;
+			}
+			if (self->health <= 0){
+				//switch target to another monster
+				slog("you lose");
+				entity_free(self);
 			}
 		}
 	}
@@ -222,8 +318,8 @@ Entity *mage_spawn(Vector2D position)
 	ent->attack = 2;
 	ent->attack2 = 30;
 	ent->attack3 = 40;
-	ent->radius = 100;
-	ent->sprite = gf2d_sprite_load_all("images/ed210_top.png", 128, 128, 16);
+	//ent->radius = 100;
+	ent->sprite = gf2d_sprite_load_all("images/charater2.png", 24, 48, 8);
 	vector2d_copy(ent->position, position);
 	ent->frameRate = 0.1;
 	ent->frameCount = 16;
@@ -231,31 +327,29 @@ Entity *mage_spawn(Vector2D position)
 	ent->update = team_update;
 	ent->rotation.x = 64;
 	ent->rotation.y = 64;
-	ent->turn = 0;
-	ent->complete = 1;
+	//ent->turn = 0;
+	//ent->complete = 1;
 	return ent;
 }
 /*void mage_think(Entity *self)
 {
-	const Uint8 *keys;
-	keys = SDL_GetKeyboardState(NULL);
-	if (self->target != NULL)
-	{
-		if (self->turn == 1)
-		{
-
-			if (keys[SDL_SCANCODE_UP])
-			{
-				self->target->health -= self->attack;
-				self->turn = 0;
-				self->complete = 1;
-				self->target->turn = 1;
-				self->target->complete = 0;
-				slog("you attacked the monster");
-			}
-		}
-
-	}
+const Uint8 *keys;
+keys = SDL_GetKeyboardState(NULL);
+if (self->target != NULL)
+{
+if (self->turn == 1)
+{
+if (keys[SDL_SCANCODE_UP])
+{
+self->target->health -= self->attack;
+self->turn = 0;
+self->complete = 1;
+self->target->turn = 1;
+self->target->complete = 0;
+slog("you attacked the monster");
+}
+}
+}
 }*/
 
 Entity *tank_spawn(Vector2D position) //tank player
@@ -274,17 +368,17 @@ Entity *tank_spawn(Vector2D position) //tank player
 	ent->attack = 5;
 	ent->attack2 = 10;
 	ent->attack3 = 12;
-	ent->radius = 100;
-	ent->sprite = gf2d_sprite_load_all("images/ed210_top.png", 128, 128, 16);
+	//ent->radius = 100;
+	ent->sprite = gf2d_sprite_load_all("images/character3.png", 24, 48, 8);
 	vector2d_copy(ent->position, position);
 	ent->frameRate = 0.1;
 	ent->frameCount = 16;
-	ent->think = team_think;
+	ent->think = team2_think;
 	ent->update = team_update;
 	ent->rotation.x = 64;
 	ent->rotation.y = 64;
-	ent->turn = 0;
-	ent->complete = 1;
+	//ent->turn = 0;
+	//	ent->complete = 1;
 	return ent;
 }
 
@@ -302,58 +396,59 @@ Entity *ranger_spawn(Vector2D position) //ranger players
 	ent->attack = 12;
 	ent->attack2 = 20;
 	ent->attack3 = 26;
-	ent->radius = 100;
+	//ent->radius = 100;
 	ent->damage = player_damage;
 	ent->die = player_die;
-	ent->sprite = gf2d_sprite_load_all("images/ed210_top.png", 128, 128, 16);
+	ent->sprite = gf2d_sprite_load_all("images/charater4.png", 24, 48, 8);
 	vector2d_copy(ent->position, position);
 	ent->frameRate = 0.1;
 	ent->frameCount = 16;
-	ent->think = team_think;
+	ent->think = team3_think;
 	ent->update = team_update;
 	ent->rotation.x = 64;
 	ent->rotation.y = 64;
-	ent->turn = 0;
-	ent->complete = 1;
+	//	ent->turn = 0;
+	//	ent->complete = 1;
+	//	ent->keys = 0;
 	return ent;
 }
 
 /*
 void mage_update(Entity *self)
 {
-	Vector2D aimdir;
-	float angle;
-	int mx, my;
-	if (!self)return;
-	SDL_GetMouseState(&mx, &my);
-	aimdir.x = mx - (self->position.x + 64);
-	aimdir.y = my - (self->position.y + 64);
-	angle = vector_angle(aimdir.x, aimdir.y);
-	self->rotation.z = angle + 90;
+Vector2D aimdir;
+float angle;
+int mx, my;
+if (!self)return;
+SDL_GetMouseState(&mx, &my);
+aimdir.x = mx - (self->position.x + 64);
+aimdir.y = my - (self->position.y + 64);
+angle = vector_angle(aimdir.x, aimdir.y);
+self->rotation.z = angle + 90;
 }
 void healer_update(Entity *self)
 {
-	Vector2D aimdir;
-	float angle;
-	int mx, my;
-	if (!self)return;
-	SDL_GetMouseState(&mx, &my);
-	aimdir.x = mx - (self->position.x + 64);
-	aimdir.y = my - (self->position.y + 64);
-	angle = vector_angle(aimdir.x, aimdir.y);
-	self->rotation.z = angle + 90;
+Vector2D aimdir;
+float angle;
+int mx, my;
+if (!self)return;
+SDL_GetMouseState(&mx, &my);
+aimdir.x = mx - (self->position.x + 64);
+aimdir.y = my - (self->position.y + 64);
+angle = vector_angle(aimdir.x, aimdir.y);
+self->rotation.z = angle + 90;
 }
 void ranger_update(Entity *self)
 {
-	Vector2D aimdir;
-	float angle;
-	int mx, my;
-	if (!self)return;
-	SDL_GetMouseState(&mx, &my);
-	aimdir.x = mx - (self->position.x + 64);
-	aimdir.y = my - (self->position.y + 64);
-	angle = vector_angle(aimdir.x, aimdir.y);
-	self->rotation.z = angle + 90;
+Vector2D aimdir;
+float angle;
+int mx, my;
+if (!self)return;
+SDL_GetMouseState(&mx, &my);
+aimdir.x = mx - (self->position.x + 64);
+aimdir.y = my - (self->position.y + 64);
+angle = vector_angle(aimdir.x, aimdir.y);
+self->rotation.z = angle + 90;
 }*/
 // levels up the player if they have 50 xp
 
@@ -375,18 +470,17 @@ int player_damage(Entity *self, int amount, Entity *source)
 		self->die(self);
 		slog("Player died");
 	}
-	
+
 	return amount;
 }
 void player_die(Entity *self)
 {
-	if (self->health == 0)
+	if (self->health <= 0)
 	{
 		slog("player died");
-		entity_free(self);
 	}
 }
-int player_health(Entity *self)
+int player_HP(Entity *self)
 {
-	return self->health;
+	return player_health;
 }

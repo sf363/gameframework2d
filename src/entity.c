@@ -76,29 +76,29 @@ void entity_manager_update_entities()
 			{
 				continue;
 			}
-			if (collision(&entity_manager.entity_list[i], &entity_manager.entity_list[j])== 1)
+			if (collision(&entity_manager.entity_list[i], &entity_manager.entity_list[j]) == 1)
 			{
 				entity_manager.entity_list[i].start = 1;
 				entity_manager.entity_list[j].start = 1;
-				if (entity_manager.entity_list[i].name == 1 && entity_manager.entity_list[j].name == 2)
-				{
-					entity_manager.entity_list[i].position.x = 1500;
-					entity_manager.entity_list[i].position.y = 100;
-					entity_manager.entity_list[j].position.x = 1800;
-					entity_manager.entity_list[j].position.y = 100;
-					entity_manager.entity_list[i].target = &entity_manager.entity_list[j];
-					entity_manager.entity_list[j].target = &entity_manager.entity_list[i];
 
-				}
-				
+
+				//if (entity_manager.entity_list[i].name == 1 && entity_manager.entity_list[j].name == 2)
+				//	{
+				//	entity_manager.entity_list[i].position.x = 1500;
+				//	entity_manager.entity_list[i].position.y = 100;
+				//	entity_manager.entity_list[j].position.x = 1800;
+				//	entity_manager.entity_list[j].position.y = 100;
 				//entity_manager.entity_list[i].target = &entity_manager.entity_list[j];
 				//entity_manager.entity_list[j].target = &entity_manager.entity_list[i];
-			
+
+
+				entity_manager.entity_list[i].target = &entity_manager.entity_list[j];
+				entity_manager.entity_list[j].target = &entity_manager.entity_list[i];
+
 				//slog("collision");
-				
-				
+
+
 			}
-			
 		}
 	}
 }
@@ -210,7 +210,7 @@ int collision(Entity *self, Entity *ent)
 		return 0;
 	}
 	float sum = self->radius + ent->radius;
-	if ((distance_x*distance_x) + (distance_y*distance_y)<= sum * sum)
+	if ((distance_x*distance_x) + (distance_y*distance_y) <= sum * sum)
 	{
 		return 1;
 	}
@@ -220,5 +220,5 @@ int collision(Entity *self, Entity *ent)
 
 float player_level()
 {
-	
+
 }

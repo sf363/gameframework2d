@@ -1,86 +1,83 @@
 #ifndef __GF2D_COLLISION_H__
 #define __GF2D_COLLISION_H__
 
-#include "shape.h"
 #include "gfc_list.h"
 #include "gfc_text.h"
 
+#include "shape.h"
+#include "gf2d_space.h"
+
+#include "gf2d_body.h"
+
 #define ALL_LAYERS 0xffffffff
+#define WORLD_LAYER 1
+#define PICKUP_LAYER 2
+#define PLAYER_LAYER 4
+#define MONSTER_LAYER 8
+#define OBJECT_LAYER 16
 
-typedef struct Collision_S Collision;
-
-typedef struct Body_S
-{
-	TextLine    name;           /**<name for debugging purposes*/
-	int         inactive;       /**<internal use only*/
-	float       gravity;        /**<the factor this body adheres to gravity*/
-	Uint32      layer;          /**<only bodies that share one or more layers will interact*/
-	Uint32      team;           /**<bodies that share a team will NOT interact*/
-	Vector2D    position;       /**<position of the center of mass*/
-	Vector2D    velocity;       /**<rate of change of position over time*/
-	Vector2D    newvelocity;    /**<after a collision this is the new calculated velocity*/
-	float       mass;           /**<used for inertia*/
-	float       elasticity;     /**<how much bounce this body has*/
-	Shape      *shape;          /**<which shape data will be used to collide for this body*/
-	void       *data;           /**<custom data pointer*/
-	int(*bodyTouch)(struct Body_S *self, struct Body_S *other, Collision *collision);/**< function to call when two bodies collide*/
-	int(*worldTouch)(struct Body_S *self, Collision *collision);/**<function to call when a body collides with a static shape*/
-}Body;
-
-struct Collision_S
+typedef struct Collision_S
 {
 	Uint8    collided;          /**<true if the there as a collision*/
+	Uint8    blocked;           /**<true if this blocked any further movement.  Default for non elastic collisions*/
 	Vector2D pointOfContact;    /**<point in space that contact was made*/
 	Vector2D normal;            /**<normal vector at the point of contact*/
 	Shape   *shape;             /**<shape information on what what contacted*/
 	Body    *body;              /**<body information if a body was collided with*/
+	Uint8    bounds;            /**<true if this collision was with the space bounds*/
 	float    timeStep;          /**<at what time step contact was made*/
-};
+}Collision;
 
-typedef struct
+typedef struct CollisionFilter_S
 {
-	List       *bodyList;       /**<list of bodies in the space*/
-	List       *staticShapes;   /**<list of shapes that will collide that do not move*/
-	int         precision;      /**<number of backoff attempts before giving up*/
-	ShapeRect        bounds;         /**<absolute bounds of the space*/
-	float       timeStep;       /**<how much each iteration of the simulation progresses time by*/
-	Vector2D    gravity;        /**<global gravity pull direction*/
-	float       dampening;      /**<rate of movement degrade  ambient frictions*/
-	float       slop;           /**<how much to correct for body overlap*/
-}Space;
+	Uint8       worldclip;      /**<if this body should clip the world bounds and static shapes*/
+	Uint32      cliplayer;      /**<only bodies that share one or more layers will collide with each other, zero layer means no dynamic bodies clipped*/
+	Uint32      touchlayer;     /**<only bodies that share one or more layers will have their touch functions called*/
+	Uint32      team;           /**<bodies that share a team will NOT interact*/
+	Body       *ignore;         /**<this body will specifically be skipped in checks*/
+}CollisionFilter;
 
-void gf2d_body_clear(Body *body);
+/**
+* @brief allocate data for a new collision
+* @return a new initialized collision or NULL on error
+*/
+Collision *gf2d_collision_new();
 
-void gf2d_body_set(
-	Body *body,
-	char       *name,
-	Uint32      layer,
-	Uint32      team,
-	Vector2D    position,
-	Vector2D    velocity,
-	float       mass,
-	float       gravity,
-	float       elasticity,
-	Shape      *shape,
-	void       *data,
-	int(*bodyTouch)(struct Body_S *self, struct Body_S *other, Collision *collision),
-	int(*worldTouch)(struct Body_S *self, Collision *collision));
+/**
+* @brief empty the list, without freeing the data
+* @param list the collision list to clear
+*/
+void gf2d_collision_list_clear(List *list);
 
-Space *gf2d_space_new();
-Space *gf2d_space_new_full(
-	int         precision,
-	ShapeRect        bounds,
-	float       timeStep,
-	Vector2D    gravity,
-	float       dampening,
-	float       slop);
-void gf2d_space_free(Space *space);
-void gf2d_space_draw(Space *space);
-void gf2d_space_add_body(Space *space, Body *body);
-void gf2d_space_remove_body(Space *space, Body *body);
-void gf2d_body_push(Body *body, Vector2D direction, float force);
-void gf2d_space_add_static_shape(Space *space, Shape shape);
-void gf2d_space_update(Space *space);
-Collision gf2d_space_shape_test(Space *space, Shape shape);
+/**
+* @brief free data allocated for a collision
+* @param collision the collision to free
+*/
+void gf2d_collision_free(Collision *collision);
+
+/**
+* @brief free all the collisions and the list containing it.
+* @param list must contain a list of collisions
+*/
+void gf2d_collision_list_free(List *list);
+
+/**
+* @brief check if the provided shape intersects anything in the space
+* @param space the space to test
+* @param shape the shape to check with
+* @param filter the filter to use for testing
+* @return a List of collisions data for the test
+*/
+List *gf2d_collision_check_space_shape(Space *space, Shape shape, CollisionFilter filter);
+
+/**
+* @brief perform a linear trace through the space
+* @param space the space to test
+* @param start the starting position of the trace
+* @param end the end point of the trace
+* @param filter the filter to apply to the test
+* @return a collision structure.  Note the timeStep will be the percentage of the trace that was completed before a collision was triggered
+*/
+Collision gf2d_collision_trace_space(Space *space, Vector2D start, Vector2D end, CollisionFilter filter);
 
 #endif
